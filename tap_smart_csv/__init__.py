@@ -95,7 +95,7 @@ def sync(config, state, catalog):
         merged_schema = override_schema_with_config(catalog_schema, table_spec)
         singer.write_schema(
             stream_name=stream.tap_stream_id,
-            schema=json_schema,
+            schema=merged_schema,
             key_properties=stream.key_properties,
         )
         modified_since = dateutil.parser.parse(

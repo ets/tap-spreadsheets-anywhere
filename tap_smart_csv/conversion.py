@@ -23,9 +23,9 @@ def coerce(datum,declared_types):
 
     desired_type = "string"
     if isinstance(declared_types, list):
-        if None in declared_types:
-            declared_types.remove(None)
-        desired_type = declared_types.pop()
+        if "null" in declared_types:
+            declared_types.remove("null")
+        desired_type = declared_types[0]
 
     coerced, _ = convert(datum, desired_type)
     return coerced
