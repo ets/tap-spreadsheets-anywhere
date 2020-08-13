@@ -17,6 +17,9 @@ CONFIG_CONTRACT = Schema({
         Optional('field_names'): [str],
         Optional('search_prefix'): str,
         Optional('worksheet_name'): str,
+        Optional('sample_rate'): int,
+        Optional('max_sampling_read'): int,
+        Optional('max_sampled_files'): int,
         Optional('schema_overrides'): {
             str: {
                 Required('type'): Any(str, [str]),

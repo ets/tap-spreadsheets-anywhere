@@ -1,6 +1,10 @@
 import re
+from datetime import datetime, timezone
+
 import singer
 import boto3
+import os
+from os import walk
 import tap_smart_csv.format_handler
 import tap_smart_csv.conversion as conversion
 
@@ -84,6 +88,8 @@ def get_input_files_for_table(table_spec, modified_since=None):
 
     if protocol == 's3':
         target_objects = list_files_in_s3_bucket(bucket, table_spec.get('search_prefix'))
+    elif protocol == 'file':
+        target_objects = list_files_in_local_bucket(bucket, table_spec.get('search_prefix'))
     else:
         raise ValueError("Protocol {} not yet supported. Pull Requests are welcome!")
 
@@ -96,8 +102,8 @@ def get_input_files_for_table(table_spec, modified_since=None):
         key = obj['Key']
         last_modified = obj['LastModified']
 
-        if (matcher.search(key) and
-                (modified_since is None or modified_since < last_modified)):
+        # noinspection PyTypeChecker
+        if matcher.search(key) and (modified_since is None or modified_since < last_modified):
             LOGGER.debug('Will download key "{}"'.format(key))
             LOGGER.debug('Last modified: {}'.format(last_modified) + ' comparing to {} '.format(modified_since))
             to_return.append({'key': key, 'last_modified': last_modified})
@@ -105,6 +111,25 @@ def get_input_files_for_table(table_spec, modified_since=None):
             LOGGER.debug('Will not download key "{}"'.format(key))
 
     return sorted(to_return, key=lambda item: item['last_modified'])
+
+
+def list_files_in_local_bucket(bucket, search_prefix=None):
+    local_filenames = []
+    path = bucket
+    if search_prefix is not None:
+        path = os.path.join(bucket, search_prefix)
+
+    max_results = 10000
+    for (dirpath, dirnames, filenames) in walk(path):
+        local_filenames.append([os.path.join(dirpath, filename) for filename in filenames])
+        if len(local_filenames) > max_results:
+            raise ValueError(f"Read more than {max_results} records from the path {path}. Use a more specific "
+                             f"search_prefix")
+
+    LOGGER.info("Found {} files.".format(len(local_filenames)))
+
+    return [{'Key': filename, 'LastModified': datetime.fromtimestamp(os.path.getmtime(filename), timezone.utc)} for
+            filename in local_filenames]
 
 
 def list_files_in_s3_bucket(bucket, search_prefix=None):

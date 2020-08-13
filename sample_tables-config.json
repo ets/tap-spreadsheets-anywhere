@@ -1,5 +1,33 @@
 {
-  "FIXME": "my_username",
-  "SUPPORT IN MELTANO.yml": "my_password",
-  "start_date": "2017-01-01T00:00:00Z"
+    "tables": [
+        {
+            "path": "s3://my-s3-bucket",
+            "name": "target_table_name",
+            "pattern": "subfolder/common_prefix.*",
+            "start_date": "2017-05-01T00:00:00Z",
+            "key_properties": [],
+            "format": "csv",
+            "universal_newlines": false,
+            "schema_overrides": {
+                "column_name": {
+                    "type": "integer",
+                    "_conversion_type": "integer"
+                }
+            }
+        },
+        {
+            "path": "sftp://username@host//path/file",
+            "name": "another_table_name",
+            "pattern": "subdir/.*User.*",
+            "start_date": "2017-05-01T00:00:00Z",
+            "key_properties": ["id"],
+            "format": "excel",
+            "schema_overrides": {
+                "id": {
+                    "type": "integer",
+                    "_conversion_type": "integer"
+                }
+            }
+        }
+    ]
 }

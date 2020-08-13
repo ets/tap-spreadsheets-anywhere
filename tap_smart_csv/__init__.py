@@ -44,7 +44,11 @@ def discover(config):
     for table_spec in config['tables']:
         modified_since = dateutil.parser.parse(table_spec['start_date'])
         target_files = file_utils.get_input_files_for_table(table_spec, modified_since)
-        samples = file_utils.sample_files(table_spec, target_files)
+        sample_rate = table_spec.get('sample_rate',10)
+        max_sampling_read = table_spec.get('max_sampling_read', 1000)
+        max_sampled_files = table_spec.get('max_sampled_files', 5)
+        samples = file_utils.sample_files(table_spec, target_files,sample_rate=sample_rate,
+                                          max_records=max_sampling_read, max_sampled_files=max_sampled_files)
 
         metadata_schema = {
             '_smart_source_bucket': {'type': 'string'},
@@ -104,12 +108,13 @@ def sync(config, state, catalog):
         LOGGER.info(f'Wrote {records_streamed} records for table "{stream.tap_stream_id}".')
     return
 
+CONFIG_KEY_TABLES_DEFINITION = 'tables_files_definition'
 
 @utils.handle_top_exception(LOGGER)
 def main():
     # Parse command line arguments
-    args = utils.parse_args(["tables_config_filename"])
-    tables_config = tables_config_util.load(args.config['tables_config_filename'])
+    args = utils.parse_args([CONFIG_KEY_TABLES_DEFINITION])
+    tables_config = tables_config_util.load(args.config[CONFIG_KEY_TABLES_DEFINITION])
 
     # If discover flag was passed, run discovery mode and dump output to stdout
     if args.discover:
