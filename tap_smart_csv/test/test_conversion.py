@@ -67,23 +67,17 @@ class TestConverter(unittest.TestCase):
         self.assertEqual(
             generate_schema([{'id': '1', 'first_name': 'Connor'},
                              {'id': '2', 'first_name': '1'}]),
-            {'id': {'type': ['null', 'integer'],
-                    '_conversion_type': 'integer'},
-             'first_name': {'type': ['null', 'string'],
-                            '_conversion_type': 'string'}})
+            {'id': {'type': ['null', 'integer'],},
+             'first_name': {'type': ['null', 'string'],}})
 
         self.assertEqual(
             generate_schema([{'id': '1', 'cost': '1'},
                              {'id': '2', 'cost': '1.25'}]),
-            {'id': {'type': ['null', 'integer'],
-                    '_conversion_type': 'integer'},
-             'cost': {'type': ['null', 'number'],
-                      '_conversion_type': 'number'}})
+            {'id': {'type': ['null', 'integer'],},
+             'cost': {'type': ['null', 'number'],}})
 
         self.assertEqual(
             generate_schema([{'id': '1', 'date': '2017-01-01'},
                              {'id': '2', 'date': '2017-01-02'}]),
-            {'id': {'type': ['null', 'integer'],
-                    '_conversion_type': 'integer'},
-             'date': {'type': ['null', 'string'],
-                      '_conversion_type': 'string'}})
+            {'id': {'type': ['null', 'integer'],},
+             'date': {'type': ['null', 'string'],}})

@@ -89,19 +89,21 @@ def sync(config, state, catalog):
     # Loop over selected streams in catalog
     for stream in catalog.get_selected_streams(state):
         LOGGER.info("Syncing stream:" + stream.tap_stream_id)
-        json_schema = stream.schema.to_dict()
+        catalog_schema = stream.schema.to_dict()
+        table_spec = next((x for x in config['tables'] if x['name'] == stream.tap_stream_id), None)
+        # Allow updates to our tables specification to override any previously extracted schema in the catalog
+        merged_schema = override_schema_with_config(catalog_schema, table_spec)
         singer.write_schema(
             stream_name=stream.tap_stream_id,
             schema=json_schema,
             key_properties=stream.key_properties,
         )
-        table_spec = next((x for x in config['tables'] if x['name'] == stream.tap_stream_id), None)
         modified_since = dateutil.parser.parse(
             state.get(stream.tap_stream_id, {}).get('modified_since') or table_spec['start_date'])
         target_files = file_utils.get_input_files_for_table(table_spec, modified_since)
         records_streamed = 0
         for t_file in target_files:
-            records_streamed += file_utils.write_file(t_file['key'], table_spec, json_schema)
+            records_streamed += file_utils.write_file(t_file['key'], table_spec, merged_schema)
             state[stream.tap_stream_id] = {'modified_since': t_file['last_modified'].isoformat()}
             singer.write_state(state)
 
@@ -124,7 +126,9 @@ def main():
     else:
         if args.catalog:
             catalog = args.catalog
+            LOGGER.info(f"Using supplied catalog {args.catalog_path}.")
         else:
+            LOGGER.info(f"Generating catalog through sampling.")
             catalog = discover(tables_config)
         sync(tables_config, args.state, catalog)
 

@@ -7,28 +7,38 @@ LOGGER = singer.get_logger()
 
 def convert_row(row, schema):
     to_return = {}
-
     for key, value in row.items():
         field_schema = schema['properties'][key]
-        datatype = field_schema.get('_conversion_type', 'string')
+        declared_types = field_schema.get('type', 'string')
 
-        LOGGER.debug('Converting {} value {} to {}'.format(
-            key, value, datatype))
-        converted, _ = convert(value, datatype)
-
-        to_return[key] = converted
+        LOGGER.debug('Converting {} value {} to {}'.format(key, value, declared_types))
+        coerced = coerce(value, declared_types)
+        to_return[key] = coerced
 
     return to_return
 
+def coerce(datum,declared_types):
+    if datum is None or datum == '':
+        return None
 
-def convert(datum, override_type=None):
+    desired_type = "string"
+    if isinstance(declared_types, list):
+        if None in declared_types:
+            declared_types.remove(None)
+        desired_type = declared_types.pop()
+
+    coerced, _ = convert(datum, desired_type)
+    return coerced
+
+
+def convert(datum, desired_type=None):
     """
     Returns tuple of (converted_data_point, json_schema_type,).
     """
     if datum is None or datum == '':
         return None, None,
 
-    if override_type in (None, 'integer'):
+    if desired_type in (None, 'integer'):
         try:
             to_return = int(datum)  # Confirm it can be coerced to int
             if not datum.lstrip("-+").isdigit():
@@ -37,14 +47,14 @@ def convert(datum, override_type=None):
         except (ValueError, TypeError):
             pass
 
-    if override_type in (None, 'number'):
+    if desired_type in (None, 'number'):
         try:
             to_return = float(datum)
             return to_return, 'number',
         except (ValueError, TypeError):
             pass
 
-    if override_type == 'date-time':
+    if desired_type == 'date-time':
         try:
             to_return = dateutil.parser.parse(datum)
 
@@ -68,7 +78,6 @@ def count_sample(sample, start=None):
             start[key] = {}
 
         (_, datatype) = convert(value)
-
         if datatype is not None:
             start[key][datatype] = start[key].get(datatype, 0) + 1
 
@@ -121,12 +130,10 @@ def generate_schema(samples):
             to_return[key] = {
                 'type': ['null', 'string'],
                 'format': 'date-time',
-                '_conversion_type': 'date-time',
             }
         else:
             to_return[key] = {
                 'type': ['null', datatype],
-                '_conversion_type': datatype,
             }
 
     return to_return
