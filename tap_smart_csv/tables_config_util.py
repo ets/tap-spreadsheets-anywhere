@@ -22,11 +22,8 @@ CONFIG_CONTRACT = Schema({
         Optional('max_sampled_files'): int,
         Optional('schema_overrides'): {
             str: {
-                Required('type'): Any(str, [str]),
-                Required('_conversion_type'): Any('string',
-                                                  'integer',
-                                                  'number',
-                                                  'date-time')
+                Required('type'): Any(Any('null','string','integer','number','date-time'),
+                                      [Any('null','string','integer','number','date-time')])
             }
         }
     }]

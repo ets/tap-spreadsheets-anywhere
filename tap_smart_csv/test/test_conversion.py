@@ -77,6 +77,12 @@ class TestConverter(unittest.TestCase):
              'cost': {'type': ['null', 'number'],}})
 
         self.assertEqual(
+            generate_schema([{'id': '1', 'cost': '1'},
+                             {'id': '2', 'cost': '1'},{'id': '-3', 'cost': '25'},{'id': '+4', 'cost': '3.25'}]),
+            {'id': {'type': ['null', 'integer'], },
+             'cost': {'type': ['null', 'number'], }})
+
+        self.assertEqual(
             generate_schema([{'id': '1', 'date': '2017-01-01'},
                              {'id': '2', 'date': '2017-01-02'}]),
             {'id': {'type': ['null', 'integer'],},

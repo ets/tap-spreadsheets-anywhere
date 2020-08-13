@@ -21,7 +21,7 @@ def coerce(datum,declared_types):
     if datum is None or datum == '':
         return None
 
-    desired_type = "string"
+    desired_type = declared_types
     if isinstance(declared_types, list):
         if "null" in declared_types:
             declared_types.remove("null")
@@ -124,6 +124,9 @@ def generate_schema(samples):
     counts = count_samples(samples)
 
     for key, value in counts.items():
+        if key == 'star_rating':
+            LOGGER.error(f"star_rating looks like: {value}")
+
         datatype = pick_datatype(value)
 
         if datatype == 'date-time':
