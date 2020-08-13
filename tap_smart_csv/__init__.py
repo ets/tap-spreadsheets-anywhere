@@ -48,7 +48,7 @@ def discover(config):
         max_sampling_read = table_spec.get('max_sampling_read', 1000)
         max_sampled_files = table_spec.get('max_sampled_files', 5)
         samples = file_utils.sample_files(table_spec, target_files,sample_rate=sample_rate,
-                                          max_records=max_sampling_read, max_sampled_files=max_sampled_files)
+                                          max_records=max_sampling_read, max_files=max_sampled_files)
 
         metadata_schema = {
             '_smart_source_bucket': {'type': 'string'},
