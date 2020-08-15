@@ -47,6 +47,7 @@ def discover(config):
         sample_rate = table_spec.get('sample_rate',10)
         max_sampling_read = table_spec.get('max_sampling_read', 1000)
         max_sampled_files = table_spec.get('max_sampled_files', 5)
+        prefer_number_vs_integer = table_spec.get('prefer_number_vs_integer', False)
         samples = file_utils.sample_files(table_spec, target_files,sample_rate=sample_rate,
                                           max_records=max_sampling_read, max_files=max_sampled_files)
 
@@ -55,7 +56,7 @@ def discover(config):
             '_smart_source_file': {'type': 'string'},
             '_smart_source_lineno': {'type': 'integer'},
         }
-        data_schema = conversion.generate_schema(samples)
+        data_schema = conversion.generate_schema(samples,prefer_number_vs_integer=prefer_number_vs_integer)
         inferred_schema = {
             'type': 'object',
             'properties': merge_dicts(data_schema, metadata_schema)

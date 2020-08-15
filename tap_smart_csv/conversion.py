@@ -125,6 +125,8 @@ def generate_schema(samples,prefer_number_vs_integer=False):
 
     for key, value in counts.items():
         datatype = pick_datatype(value,prefer_number_vs_integer)
+        # if "survey_responses_count" == key:
+        #     LOGGER.error(f"Key '{key}' held {value} and was typed as {datatype} with prefer_number_vs_integer={prefer_number_vs_integer}")
 
         if datatype == 'date-time':
             to_return[key] = {
