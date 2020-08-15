@@ -1,10 +1,12 @@
 import csv
 import re
+import singer
 
+LOGGER = singer.get_logger()
 
 def generator_wrapper(reader):
-    to_return = {}
     for row in reader:
+        to_return = {}
         for key, value in row.items():
             if key is None:
                 key = '_smart_extra'
@@ -17,7 +19,6 @@ def generator_wrapper(reader):
             # replace whitespace with underscores
             formatted_key = re.sub(r"\s+", '_', formatted_key)
             to_return[formatted_key.lower()] = value
-
         yield to_return
 
 

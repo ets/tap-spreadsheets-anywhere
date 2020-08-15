@@ -124,9 +124,6 @@ def generate_schema(samples):
     counts = count_samples(samples)
 
     for key, value in counts.items():
-        if key == 'star_rating':
-            LOGGER.error(f"star_rating looks like: {value}")
-
         datatype = pick_datatype(value)
 
         if datatype == 'date-time':

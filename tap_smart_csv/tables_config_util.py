@@ -1,4 +1,6 @@
 import json
+from json.decoder import JSONDecodeError
+
 import singer
 
 from voluptuous import Schema, Required, Any, Optional
@@ -34,6 +36,9 @@ def load(filename):
     try:
         with open(filename) as handle:
             config = json.load(handle)
+    except JSONDecodeError as jde:
+        logger.fatal(f"Tables definition file is not valid json: {jde}")
+        raise RuntimeError
     except:
         logger.fatal("Failed to decode config file. Is it valid json?")
         raise RuntimeError

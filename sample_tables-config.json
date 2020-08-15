@@ -8,10 +8,12 @@
             "key_properties": [],
             "format": "csv",
             "universal_newlines": false,
+            "sample_rate": 10,
+            "max_sampling_read": 2000,
+            "max_sampled_files": 3,
             "schema_overrides": {
                 "column_name": {
                     "type": "integer",
-                    "_conversion_type": "integer"
                 }
             }
         },
@@ -25,7 +27,6 @@
             "schema_overrides": {
                 "id": {
                     "type": "integer",
-                    "_conversion_type": "integer"
                 }
             }
         }

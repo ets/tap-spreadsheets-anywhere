@@ -100,9 +100,7 @@ def get_row_iterator(table_spec, uri):
 
 def get_filetype_handler(table_spec, reader):
     if table_spec['format'] == 'csv':
-        return tap_smart_csv.csv_handler.get_row_iterator(
-            table_spec, reader)
+        return tap_smart_csv.csv_handler.get_row_iterator(table_spec, reader)
 
     elif table_spec['format'] == 'excel':
-        return tap_smart_csv.excel_handler.get_row_iterator(
-            table_spec, reader)
+        return tap_smart_csv.excel_handler.get_row_iterator(table_spec, reader)

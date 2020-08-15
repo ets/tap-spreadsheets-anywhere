@@ -3,11 +3,9 @@ import xlrd
 
 
 def generator_wrapper(reader):
-    to_return = {}
-
     header_row = None
-
     for row in reader:
+        to_return = {}
         if header_row is None:
             header_row = row
             continue
