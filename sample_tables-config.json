@@ -11,6 +11,7 @@
             "sample_rate": 10,
             "max_sampling_read": 2000,
             "max_sampled_files": 3,
+            "prefer_number_vs_integer else return": true,
             "schema_overrides": {
                 "column_name": {
                     "type": "integer",

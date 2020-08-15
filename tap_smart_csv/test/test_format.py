@@ -12,8 +12,7 @@ TEST_TABLE_SPEC = {
     "format": "csv",
     "schema_overrides": {
         "id": {
-            "type": "integer",
-            "_conversion_type": "integer"
+            "type": "integer"
         }
     }
 }

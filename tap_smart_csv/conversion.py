@@ -93,7 +93,7 @@ def count_samples(samples):
     return to_return
 
 
-def pick_datatype(counts):
+def pick_datatype(counts,prefer_number_vs_integer=False):
     """
     If the underlying records are ONLY of type `integer`, `number`,
     or `date-time`, then return that datatype.
@@ -107,7 +107,7 @@ def pick_datatype(counts):
 
     if len(counts) == 1:
         if counts.get('integer', 0) > 0:
-            to_return = 'integer'
+            to_return = 'number' if prefer_number_vs_integer else 'integer'
         elif counts.get('number', 0) > 0:
             to_return = 'number'
 
@@ -119,12 +119,12 @@ def pick_datatype(counts):
     return to_return
 
 
-def generate_schema(samples):
+def generate_schema(samples,prefer_number_vs_integer=False):
     to_return = {}
     counts = count_samples(samples)
 
     for key, value in counts.items():
-        datatype = pick_datatype(value)
+        datatype = pick_datatype(value,prefer_number_vs_integer)
 
         if datatype == 'date-time':
             to_return[key] = {
