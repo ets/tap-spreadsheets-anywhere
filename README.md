@@ -13,6 +13,9 @@ This is a [Singer](https://singer.io) tap that reads data from files accessible 
 - GCS
 - Azure Blob Storage
 
+### Compression
+smart_open allows reading and writing gzip and bzip2 files. They are transparently handled over HTTP, S3, and other protocols, too, based on the extension of the file being opened.
+
 ### Configuration
 
 The config.json supplied to this tap by meltano must hold a single key in it `tables_files_definition` which points to the tables definition file described below. Meltano will produce this file using your tap configuration in meltano.yml which should look like this:
