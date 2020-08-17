@@ -11,7 +11,7 @@
             "sample_rate": 10,
             "max_sampling_read": 2000,
             "max_sampled_files": 3,
-            "prefer_number_vs_integer else return": true,
+            "prefer_number_vs_integer": true,
             "schema_overrides": {
                 "column_name": {
                     "type": "integer",
@@ -19,7 +19,7 @@
             }
         },
         {
-            "path": "sftp://username@host//path/file",
+            "path": "sftp://username:password@host//path/file",
             "name": "another_table_name",
             "pattern": "subdir/.*User.*",
             "start_date": "2017-05-01T00:00:00Z",

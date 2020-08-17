@@ -7,6 +7,7 @@ import os
 from os import walk
 import tap_smart_csv.format_handler
 import tap_smart_csv.conversion as conversion
+import smart_open.ssh as ssh_transport
 
 LOGGER = singer.get_logger()
 
@@ -86,10 +87,13 @@ def parse_path(path):
 def get_input_files_for_table(table_spec, modified_since=None):
     protocol, bucket = parse_path(table_spec['path'])
 
+    # TODO Breakout the transport schemes here similar to the registry/loading pattern used by smart_open
     if protocol == 's3':
         target_objects = list_files_in_s3_bucket(bucket, table_spec.get('search_prefix'))
     elif protocol == 'file':
         target_objects = list_files_in_local_bucket(bucket, table_spec.get('search_prefix'))
+    elif protocol in ["sftp"]:
+        target_objects = list_files_in_SSH_bucket(table_spec['path'],table_spec.get('search_prefix'))
     else:
         raise ValueError("Protocol {} not yet supported. Pull Requests are welcome!")
 
@@ -113,6 +117,38 @@ def get_input_files_for_table(table_spec, modified_since=None):
     return sorted(to_return, key=lambda item: item['last_modified'])
 
 
+def list_files_in_SSH_bucket(uri, search_prefix=None):
+    try:
+        import paramiko
+    except ImportError:
+        LOGGER.warn(
+            'paramiko missing, opening SSH/SCP/SFTP paths will be disabled. '
+            '`pip install paramiko` to suppress'
+        )
+        raise
+
+    parsed_uri = ssh_transport.parse_uri(uri)
+    uri_path = parsed_uri.pop('uri_path')
+    transport_params={'connect_kwargs':{'allow_agent':False,'look_for_keys':False}}
+    ssh = ssh_transport._connect(parsed_uri['host'], parsed_uri['user'], parsed_uri['port'], parsed_uri['password'], transport_params=transport_params)
+    sftp_client = ssh.get_transport().open_sftp_client()
+    entries = []
+    max_results = 10000
+    from stat import S_ISREG
+    import fnmatch
+    for entry in sftp_client.listdir_attr(uri_path):
+        if search_prefix is None or fnmatch.fnmatch(entry.filename,search_prefix):
+            mode = entry.st_mode
+            if S_ISREG(mode):
+                entries.append({'Key':entry.filename,'LastModified':datetime.fromtimestamp(entry.st_mtime, timezone.utc)})
+            if len(entries) > max_results:
+                raise ValueError(f"Read more than {max_results} records from the path {uri_path}. Use a more specific "
+                                 f"search_prefix")
+
+    LOGGER.info("Found {} files.".format(entries))
+    return entries
+
+
 def list_files_in_local_bucket(bucket, search_prefix=None):
     local_filenames = []
     path = bucket
@@ -121,7 +157,8 @@ def list_files_in_local_bucket(bucket, search_prefix=None):
 
     max_results = 10000
     for (dirpath, dirnames, filenames) in walk(path):
-        local_filenames.append([os.path.join(dirpath, filename) for filename in filenames])
+        for filename in filenames:
+            local_filenames.append(os.path.join(dirpath, filename))
         if len(local_filenames) > max_results:
             raise ValueError(f"Read more than {max_results} records from the path {path}. Use a more specific "
                              f"search_prefix")

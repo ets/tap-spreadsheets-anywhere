@@ -1,10 +1,11 @@
 import codecs
 import unittest
 
+import dateutil
 import smart_open
 
-from tap_smart_csv import tables_config_util
-from tap_smart_csv.format_handler import get_filetype_handler, monkey_patch_streamreader
+from tap_smart_csv import tables_config_util, file_utils
+from tap_smart_csv.format_handler import get_filetype_handler, monkey_patch_streamreader, get_row_iterator
 
 TEST_TABLE_SPEC = {
     "tables":[
@@ -25,6 +26,18 @@ TEST_TABLE_SPEC = {
                     "type": "integer"
                 }
             }
+        },
+        {
+            "path": "file://./tap_smart_csv/test",
+            "name": "badnewlines",
+            "pattern": ".*\.csv",
+            "start_date": "2017-05-01T00:00:00Z",
+            "key_properties": [],
+            "format": "csv",
+            "universal_newlines": False,
+            "sample_rate": 5,
+            "max_sampling_read": 2000,
+            "max_sampled_files": 3
         }
     ]
 }
@@ -35,7 +48,15 @@ class TestFormatHandler(unittest.TestCase):
     def test_custom_config(self):
         tables_config_util.CONFIG_CONTRACT(TEST_TABLE_SPEC)
 
-    def test_strip_newlines_local_custom(self):
+    def test_strip_newlines_local_custom_mini(self):
+        test_filename_uri = './tap_smart_csv/test/sample_with_bad_newlines.csv'
+        iterator = get_row_iterator(TEST_TABLE_SPEC['tables'][0], test_filename_uri)
+
+        for row in iterator:
+            self.assertTrue(row['id'].isnumeric(), "Parsed ID is not a number for: {}".format(row['id']))
+
+    def test_strip_newlines_monkey_patch_locally(self):
+        """Load the file in binary mode to force the use of StreamHandler and the monkey patch"""
         test_filename = './tap_smart_csv/test/sample_with_bad_newlines.csv'
 
         file_handle = smart_open.open(test_filename, 'rb', errors='surrogateescape')
@@ -45,3 +66,9 @@ class TestFormatHandler(unittest.TestCase):
 
         for row in iterator:
             self.assertTrue(row['id'].isnumeric(), "Parsed ID is not a number for: {}".format(row['id']))
+
+    def test_local_bucket(self):
+        table_spec = TEST_TABLE_SPEC['tables'][1]
+        modified_since = dateutil.parser.parse(table_spec['start_date'])
+        target_files = file_utils.get_input_files_for_table(table_spec, modified_since)
+        assert len(target_files) == 1
