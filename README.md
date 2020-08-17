@@ -1,6 +1,6 @@
-# tap-s3-csv
+# tap-smart-csv
 
-This is a [Singer](https://singer.io) tap that reads data from files located inside a given S3 bucket and produces JSON-formatted data following the [Singer spec](https://github.com/singer-io/getting-started/blob/master/SPEC.md). This tap is developed for compatability with [Meltano](https://meltano.com/).
+This is a [Singer](https://singer.io) tap that reads data from files accessible from any [smart_open](https://github.com/RaRe-Technologies/smart_open) supported transport and produces JSON-formatted data following the [Singer spec](https://github.com/singer-io/getting-started/blob/master/SPEC.md). This tap is developed for compatibility with [Meltano](https://meltano.com/).
 
 ## How to use it
 
