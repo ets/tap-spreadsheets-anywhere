@@ -1,6 +1,6 @@
 # tap-spreadsheets-anywhere
 
-This is a [Singer](https://singer.io) tap that reads data from files accessible from any [smart_open](https://github.com/RaRe-Technologies/smart_open) supported transport and produces JSON-formatted data following the [Singer spec](https://github.com/singer-io/getting-started/blob/master/SPEC.md). This tap is developed for compatibility with [Meltano](https://meltano.com/).
+This is a [Singer](https://singer.io) tap that reads data from spreadsheet files (CSVs, Excel, custom-delimited) accessible from any [smart_open](https://github.com/RaRe-Technologies/smart_open) supported transport and produces JSON-formatted data following the [Singer spec](https://github.com/singer-io/getting-started/blob/master/SPEC.md). This tap is developed for compatibility with [Meltano](https://meltano.com/).
 
 ## How to use it
 
@@ -95,7 +95,7 @@ Each object in the 'tables' array describes one or more CSV or Excel spreadsheet
 - **pattern**: This is an escaped regular expression that the tap will use to filter the listing result set returned from the listing request. This pattern potentially reduces the number of listed files that are considered as sources for the declared table. It's a bit strange, since this is an escaped string inside of an escaped string, any backslashes in the RegEx will need to be double-escaped.
 - **start_date**: This is the datetime that the tap will use to filter files, based on the modified timestamp of the file.
 - **key_properties**: These are the "primary keys" of the CSV files, to be used by the target for deduplication and primary key definitions downstream in the destination.
-- **format**: Must be either 'csv' or 'excel'
+- **format**: Must be either 'csv' or 'excel' and note that csv can be further customized with delimiter and quotechar variables below.
 - **field_names**: (optional) An array holding the names of the columns in the targeted files. If not supplied, the first row of each file must hold the desired values. 
 - **universal_newlines**: (optional) Should the source file parsers honor [universal newlines](https://docs.python.org/2.3/whatsnew/node7.html)). Setting this to false will instruct the parser to only consider '\n' as a valid newline identifier.
 - **sample_rate**: (optional) The sampling rate to apply when reading a source file for sampling in discovery mode. A sampling rate of 1 will sample every line.  A sampling rate of 10 (the default) will sample every 10th line.
