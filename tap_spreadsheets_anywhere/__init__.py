@@ -7,9 +7,9 @@ from singer import utils
 from singer.catalog import Catalog, CatalogEntry
 from singer.schema import Schema
 
-import tap_smart_csv.tables_config_util as tables_config_util
-import tap_smart_csv.conversion as conversion
-import tap_smart_csv.file_utils as file_utils
+import tap_spreadsheets_anywhere.tables_config_util as tables_config_util
+import tap_spreadsheets_anywhere.conversion as conversion
+import tap_spreadsheets_anywhere.file_utils as file_utils
 
 LOGGER = singer.get_logger()
 

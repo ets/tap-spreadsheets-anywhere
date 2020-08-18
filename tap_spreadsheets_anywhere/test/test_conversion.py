@@ -1,6 +1,6 @@
 import unittest
 
-from tap_smart_csv.conversion import convert, count_sample, count_samples, \
+from tap_spreadsheets_anywhere.conversion import convert, count_sample, count_samples, \
     pick_datatype, generate_schema
 
 

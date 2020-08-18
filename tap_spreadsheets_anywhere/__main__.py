@@ -1,4 +1,4 @@
 import sys
-from tap_smart_csv import main
+from tap_spreadsheets_anywhere import main
 # Useful for debugging
 sys.exit(main())

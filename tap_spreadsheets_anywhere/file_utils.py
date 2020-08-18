@@ -5,8 +5,8 @@ import singer
 import boto3
 import os
 from os import walk
-import tap_smart_csv.format_handler
-import tap_smart_csv.conversion as conversion
+import tap_spreadsheets_anywhere.format_handler
+import tap_spreadsheets_anywhere.conversion as conversion
 import smart_open.ssh as ssh_transport
 
 LOGGER = singer.get_logger()
@@ -15,7 +15,7 @@ LOGGER = singer.get_logger()
 def write_file(target_filename, table_spec, schema):
     LOGGER.info('Syncing file "{}".'.format(target_filename))
     target_uri = table_spec['path'] + '/' + target_filename
-    iterator = tap_smart_csv.format_handler.get_row_iterator(table_spec, target_uri)
+    iterator = tap_spreadsheets_anywhere.format_handler.get_row_iterator(table_spec, target_uri)
     records_synced = 0
 
     for row in iterator:
@@ -45,7 +45,7 @@ def sample_file(table_spec, target_filename, sample_rate, max_records):
                 .format(target_filename, max_records, sample_rate))
 
     target_uri = table_spec['path'] + '/' + target_filename
-    iterator = tap_smart_csv.format_handler.get_row_iterator(table_spec, target_uri)
+    iterator = tap_spreadsheets_anywhere.format_handler.get_row_iterator(table_spec, target_uri)
     samples = []
     current_row = 0
 

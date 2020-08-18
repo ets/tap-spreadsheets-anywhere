@@ -1,17 +1,20 @@
-# tap-smart-csv
+# tap-spreadsheets-anywhere
 
 This is a [Singer](https://singer.io) tap that reads data from files accessible from any [smart_open](https://github.com/RaRe-Technologies/smart_open) supported transport and produces JSON-formatted data following the [Singer spec](https://github.com/singer-io/getting-started/blob/master/SPEC.md). This tap is developed for compatibility with [Meltano](https://meltano.com/).
 
 ## How to use it
 
-`tap-smart-csv` works together with any other [Singer Target](https://singer.io) to move data from any [smart_open](https://github.com/RaRe-Technologies/smart_open) supported transport to any target destination. [smart_open](https://github.com/RaRe-Technologies/smart_open) supports a wide range of transport options out of the box, including:
+`tap-spreadsheets-anywhere` works together with any other [Singer Target](https://singer.io) to move data from any [smart_open](https://github.com/RaRe-Technologies/smart_open) supported transport to any target destination. [smart_open](https://github.com/RaRe-Technologies/smart_open) supports a wide range of transport options out of the box, including:
 
 - S3
+- local directories (file://)
 - HTTP, HTTPS (read-only)
 - SSH, SCP and SFTP
 - WebHDFS
 - GCS
 - Azure Blob Storage
+
+Multiple individual files with the same schema can be configured & ingested into the same "Table" for processing.
 
 ### Compression
 smart_open allows reading and writing gzip and bzip2 files. They are transparently handled over HTTP, S3, and other protocols, too, based on the extension of the file being opened.
@@ -22,10 +25,10 @@ The Meltano configuration for this tap must contain the key 'tables' which holds
 ```
 config:
   extractors:
-  - name: tap-smart-csv
-    namespace: tap_smart_csv
-    pip_url: git+https://github.com/ets/tap-smart-csv.git
-    executable: tap-smart-csv
+  - name: tap-spreadsheets-anywhere
+    namespace: tap_spreadsheets_anywhere
+    pip_url: git+https://github.com/ets/tap-spreadsheets-anywhere.git
+    executable: tap-spreadsheets-anywhere
     capabilities:
     - catalog
     - discover
@@ -36,7 +39,7 @@ config:
 
 To run this tap directly from the CLI, a config.json file must be supplied which holds the 'tables' array.
 A sample config file is available here [sample_config.json](sample_config.json) and a description of the required/optional fields declared within it follow.
-The configuration is also captured in [tables_config_util.py](tap_smart_csv/tables_config_util.py) as a [`voluptuous`](https://github.com/alecthomas/voluptuous)-based configuration for validation purposes.
+The configuration is also captured in [tables_config_util.py](tap_spreadsheets_anywhere/tables_config_util.py) as a [`voluptuous`](https://github.com/alecthomas/voluptuous)-based configuration for validation purposes.
 
 ```
 {
@@ -115,7 +118,7 @@ This tap authenticates with target systems as described in the [smart_open docum
 First, make sure Python 3 is installed on your system. Then, execute `create_virtualenv.sh` to create a local venv and install the necessary dependencies. If you are executing this tap outside of Meltano then you will need to supply the config.json file yourself. A sample configuration is available here [sample_config.json](sample_config.json)
 You can invoke this tap directly with:
 ```
-python -m tap_smart_csv --config config.json
+python -m tap_spreadsheets_anywhere --config config.json
 ```
 
 

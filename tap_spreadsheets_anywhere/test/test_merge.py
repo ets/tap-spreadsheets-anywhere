@@ -1,6 +1,6 @@
 import unittest
 
-from tap_smart_csv import merge_dicts
+from tap_spreadsheets_anywhere import merge_dicts
 
 
 class TestDictionaryMerge(unittest.TestCase):

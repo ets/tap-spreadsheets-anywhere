@@ -1,8 +1,8 @@
 import smart_open
 
 from codecs import StreamReader
-import tap_smart_csv.csv_handler
-import tap_smart_csv.excel_handler
+import tap_spreadsheets_anywhere.csv_handler
+import tap_spreadsheets_anywhere.excel_handler
 
 
 def get_streamreader(uri, universal_newlines=True,newline='',open_mode='r'):
@@ -97,9 +97,9 @@ def get_row_iterator(table_spec, uri):
 
     if table_spec['format'] == 'csv':
         reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r')
-        return tap_smart_csv.csv_handler.get_row_iterator(table_spec, reader)
+        return tap_spreadsheets_anywhere.csv_handler.get_row_iterator(table_spec, reader)
     elif table_spec['format'] == 'excel':
         reader = get_streamreader(uri, universal_newlines=universal_newlines,newline=None, open_mode='rb')
-        return tap_smart_csv.excel_handler.get_row_iterator(table_spec, reader)
+        return tap_spreadsheets_anywhere.excel_handler.get_row_iterator(table_spec, reader)
 
 
