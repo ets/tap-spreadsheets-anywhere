@@ -58,13 +58,14 @@ The configuration is also captured in [tables_config_util.py](tap_smart_csv/tabl
             "selected": true,
 
             // for any field in the table, you can hardcode the json schema datatype to override
-            // the schema infered through discovery mode            
+            // the schema infered through discovery mode. 
+            // *Note Meltano users* - the scheam override support delivered in Meltano v1.41.1 is more robust
+            //  and should be preferred to this tap-specific override functionality.  
             "schema_overrides": {
                 "id": {
                     "type": ["null", "integer"],
                 },
-                // if you want the tap to enforce that a field is not nullable, you can do
-                // it like so:
+                // if you want the tap to enforce that a field is not nullable, you can do it like so:
                 "first_name": {
                     "type": "string",
                 }
@@ -80,11 +81,6 @@ The configuration is also captured in [tables_config_util.py](tap_smart_csv/tabl
             // the excel definition is identical to csv except that you must specify
             // the worksheet name to pull from in your xls(x) file.
             "worksheet_name": "Names"
-            "schema_overrides": {
-                "id": {
-                    "type": "integer",
-                }
-            }
         }
     ]
 }
