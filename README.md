@@ -112,6 +112,13 @@ ies to your files.
 
 This tap authenticates with target systems as described in the [smart_open documentation here](https://github.com/RaRe-Technologies/smart_open).
 
+### State 
+
+This tap is designed to continually poll a configured directory for any unprocessed files that match a table configuration and to process any 
+that are found.  On the first syncing run, the declared start_date will be used to filter the set of files that match the search_prefix and pattern expressions. 
+The last modified date of the most recently synced file will then be written to state and used in place of start_date on the next syncing run.
+
+While state is maintained, only new files will be processed from subsequent runs. 
 
 ### Install and Run outside of Meltano
 
