@@ -27,10 +27,7 @@ def generator_wrapper(reader):
 
 
 def get_row_iterator(table_spec, file_handle):
-    workbook = xlrd.open_workbook(
-        on_demand=True,
-        file_contents=file_handle.read())
-
+    workbook = xlrd.open_workbook(on_demand=True,file_contents=file_handle.read())
     sheet = workbook.sheet_by_name(table_spec["worksheet_name"])
 
     return generator_wrapper(sheet.get_rows())

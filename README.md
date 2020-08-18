@@ -77,9 +77,8 @@ The configuration is also captured in [tables_config_util.py](tap_smart_csv/tabl
             "pattern": "subdir/.*User.*",
             "start_date": "2017-05-01T00:00:00Z",
             "key_properties": ["id"],
-            "format": "excel",
-            // the excel definition is identical to csv except that you must specify
-            // the worksheet name to pull from in your xls(x) file.
+            "format": "excel", 
+            // you must specify the worksheet name to pull from in your xls(x) file.
             "worksheet_name": "Names"
         }
     ]

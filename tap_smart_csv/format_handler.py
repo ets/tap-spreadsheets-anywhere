@@ -5,8 +5,8 @@ import tap_smart_csv.csv_handler
 import tap_smart_csv.excel_handler
 
 
-def get_streamreader(uri, universal_newlines=True):
-    streamreader = smart_open.open(uri, 'r', newline='', errors='surrogateescape')
+def get_streamreader(uri, universal_newlines=True,newline='',open_mode='r'):
+    streamreader = smart_open.open(uri, open_mode, newline=newline, errors='surrogateescape')
     if not universal_newlines and isinstance(streamreader, StreamReader):
         return monkey_patch_streamreader(streamreader)
     return streamreader
@@ -94,13 +94,12 @@ def mp_readline(self, size=None, keepends=False):
 
 def get_row_iterator(table_spec, uri):
     universal_newlines = table_spec['universal_newlines'] if 'universal_newlines' in table_spec else True
-    reader = get_streamreader(uri, universal_newlines=universal_newlines)
-    return get_filetype_handler(table_spec, reader)
 
-
-def get_filetype_handler(table_spec, reader):
     if table_spec['format'] == 'csv':
+        reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r')
         return tap_smart_csv.csv_handler.get_row_iterator(table_spec, reader)
-
     elif table_spec['format'] == 'excel':
+        reader = get_streamreader(uri, universal_newlines=universal_newlines,newline=None, open_mode='rb')
         return tap_smart_csv.excel_handler.get_row_iterator(table_spec, reader)
+
+
