@@ -112,13 +112,13 @@ def sync(config, state, catalog):
         LOGGER.info(f'Wrote {records_streamed} records for table "{stream.tap_stream_id}".')
     return
 
-CONFIG_KEY_TABLES_DEFINITION = 'tables_files_definition'
+REQUIRED_CONFIG_KEYS = 'tables'
 
 @utils.handle_top_exception(LOGGER)
 def main():
     # Parse command line arguments
-    args = utils.parse_args([CONFIG_KEY_TABLES_DEFINITION])
-    tables_config = tables_config_util.load(args.config[CONFIG_KEY_TABLES_DEFINITION])
+    args = utils.parse_args([REQUIRED_CONFIG_KEYS])
+    tables_config = tables_config_util.validate(args.config)
 
     # If discover flag was passed, run discovery mode and dump output to stdout
     if args.discover:

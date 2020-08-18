@@ -18,7 +18,7 @@ smart_open allows reading and writing gzip and bzip2 files. They are transparent
 
 ### Configuration
 
-The config.json supplied to this tap by meltano must hold a single key in it `tables_files_definition` which points to the tables definition file described below. Meltano will produce this file using your tap configuration in meltano.yml which should look like this:
+The Meltano configuration for this tap must contain the key 'tables' which holds an array of json objects describing each set of targeted source files.
 ```
 config:
   extractors:
@@ -31,11 +31,12 @@ config:
     - discover
     - state
     config:
-      tables_files_definition: load/tables-config.json
+      tables: []
 ``` 
 
-A sample tables file definition is available here [sample_tables-config.json](sample_tables-config.json)
-Here is a description of the required/optional fields declared in [tables_config_util.py](tap_smart_csv/tables_config_util.py) as a [`voluptuous`](https://github.com/alecthomas/voluptuous)-based configuration:
+To run this tap directly from the CLI, a config.json file must be supplied which holds the 'tables' array.
+A sample config file is available here [sample_config.json](sample_config.json) and a description of the required/optional fields declared within it follow.
+The configuration is also captured in [tables_config_util.py](tap_smart_csv/tables_config_util.py) as a [`voluptuous`](https://github.com/alecthomas/voluptuous)-based configuration for validation purposes.
 
 ```
 {
@@ -47,6 +48,8 @@ Here is a description of the required/optional fields declared in [tables_config
             "start_date": "2017-05-01T00:00:00Z",
             "key_properties": [],
             "format": "csv",
+            "delimiter": "|",
+            "quotechar": '"',
             "universal_newlines": false,
             "sample_rate": 10,
             "max_sampling_read": 2000,
@@ -104,6 +107,8 @@ Each object in the 'tables' array describes one or more CSV or Excel spreadsheet
 ies to your files.
 - **selected**: (optional) Should this table be synced. Defaults to true. Setting to false will skip this table on a sync run.
 - **worksheet_name**: (optional) the worksheet name to pull from in the targeted xls file(s). Only required when format is excel
+- **delimiter**: (optional) the delimiter to use when format is 'csv' - defaults to a comma ','
+- **quotechar**: (optional) the character used to surround values that may contain delimiters - defaults to a double quote '"'
 
 ### Authentication and Credentials
 
@@ -115,7 +120,7 @@ This tap authenticates with target systems as described in the [smart_open docum
 First, make sure Python 3 is installed on your system. Then, execute `create_virtualenv.sh` to create a local venv and install the necessary dependencies. If you are executing this tap outside of Meltano then you will need to supply the config.json file yourself. A sample configuration is available here [sample_config.json](sample_config.json)
 You can invoke this tap directly with:
 ```
-python -m tap_smart_csv --config sample_config.json
+python -m tap_smart_csv --config config.json
 ```
 
 
