@@ -13,6 +13,7 @@ setup(
         "singer-python>=5.0.12",
         'smart_open>=2.1',
         'voluptuous>=0.10.5',
+        'boto3>=1.15.5',
         'xlrd',
     ],
     entry_points="""
