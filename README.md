@@ -8,7 +8,7 @@ This is a [Singer](https://singer.io) tap that reads data from spreadsheet files
 
 - S3
 - local directories (file://) 
--   NOTE: that absolute paths look like this "file:///root/child/target" with three forward slashes
+  - NOTE: that absolute paths look like this "file:///root/child/target" with three forward slashes
 - HTTP, HTTPS (read-only)
 - SSH, SCP and SFTP
 - WebHDFS
