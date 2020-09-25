@@ -14,7 +14,7 @@ setup(
         'smart_open>=2.1',
         'voluptuous>=0.10.5',
         'boto3>=1.15.5',
-        'google-cloud>=0.34.0',
+        'google-cloud-storage>=1.31.2',
         'xlrd',
     ],
     entry_points="""
