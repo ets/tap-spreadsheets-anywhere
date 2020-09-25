@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 import singer
 import boto3
+from google.cloud import storage
 import os
 from os import walk
 import tap_spreadsheets_anywhere.format_handler
@@ -94,6 +95,8 @@ def get_input_files_for_table(table_spec, modified_since=None):
         target_objects = list_files_in_local_bucket(bucket, table_spec.get('search_prefix'))
     elif protocol in ["sftp"]:
         target_objects = list_files_in_SSH_bucket(table_spec['path'],table_spec.get('search_prefix'))
+    elif protocol in ["gs"]:
+        target_objects = list_files_in_gs_bucket(bucket,table_spec.get('search_prefix'))        
     else:
         raise ValueError("Protocol {} not yet supported. Pull Requests are welcome!")
 
@@ -168,6 +171,15 @@ def list_files_in_local_bucket(bucket, search_prefix=None):
 
     return [{'Key': filename, 'LastModified': datetime.fromtimestamp(os.path.getmtime(os.path.join(dirpath, filename)), timezone.utc)} for
             filename in local_filenames]
+
+def list_files_in_gs_bucket(bucket, search_prefix=None):
+    gs_client = storage.Client()
+        
+    blobs = storage_client.list_blobs(bucket, prefix=search_prefix)
+
+    LOGGER.info("Found {} files.".format(len(blobs)))
+
+    return [{'Key': blob.name, 'LastModified': blob.updated} for blob in blobs]
 
 
 def list_files_in_s3_bucket(bucket, search_prefix=None):
