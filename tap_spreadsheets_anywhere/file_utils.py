@@ -155,17 +155,18 @@ def list_files_in_local_bucket(bucket, search_prefix=None):
     if search_prefix is not None:
         path = os.path.join(bucket, search_prefix)
 
+    LOGGER.info(f"Walking {path}.")
     max_results = 10000
     for (dirpath, dirnames, filenames) in walk(path):
         for filename in filenames:
-            local_filenames.append(os.path.join(dirpath, filename))
+            local_filenames.append(filename)
         if len(local_filenames) > max_results:
             raise ValueError(f"Read more than {max_results} records from the path {path}. Use a more specific "
                              f"search_prefix")
 
     LOGGER.info("Found {} files.".format(len(local_filenames)))
 
-    return [{'Key': filename, 'LastModified': datetime.fromtimestamp(os.path.getmtime(filename), timezone.utc)} for
+    return [{'Key': filename, 'LastModified': datetime.fromtimestamp(os.path.getmtime(os.path.join(dirpath, filename)), timezone.utc)} for
             filename in local_filenames]
 
 
