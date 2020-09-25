@@ -7,7 +7,8 @@ This is a [Singer](https://singer.io) tap that reads data from spreadsheet files
 `tap-spreadsheets-anywhere` works together with any other [Singer Target](https://singer.io) to move data from any [smart_open](https://github.com/RaRe-Technologies/smart_open) supported transport to any target destination. [smart_open](https://github.com/RaRe-Technologies/smart_open) supports a wide range of transport options out of the box, including:
 
 - S3
-- local directories (file://) NOTE: that absolute paths look like this "file:///root/child/target" with three forward slashes
+- local directories (file://) 
+-   NOTE: that absolute paths look like this "file:///root/child/target" with three forward slashes
 - HTTP, HTTPS (read-only)
 - SSH, SCP and SFTP
 - WebHDFS
