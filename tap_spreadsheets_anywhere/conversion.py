@@ -40,17 +40,17 @@ def convert(datum, desired_type=None):
 
     if desired_type in (None, 'integer'):
         try:
-            to_return = int(datum)  # Confirm it can be coerced to int
+            int(datum)  # Confirm it can be coerced to int
             if not datum.lstrip("-+").isdigit():
                 raise TypeError
-            return to_return, 'integer',
+            return datum, 'integer',
         except (ValueError, TypeError):
             pass
 
     if desired_type in (None, 'number'):
         try:
-            to_return = float(datum)
-            return to_return, 'number',
+            float(datum)
+            return datum, 'number',
         except (ValueError, TypeError):
             pass
 

@@ -13,6 +13,7 @@ class TestConverter(unittest.TestCase):
 
         # integers
         self.assertEqual(convert('1'), (1, 'integer',))
+        self.assertEqual(convert('1058'), (1058, 'integer',))
         self.assertEqual(convert('-1'), (-1, 'integer',))
 
         # floats
