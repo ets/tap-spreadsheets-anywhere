@@ -28,7 +28,7 @@ TEST_TABLE_SPEC = {
             }
         },
         {
-            "path": "file://./tap_spreadsheets_anywhere/test",
+            "path": "file://./artifacts",
             "name": "badnewlines",
             "pattern": '.*\\.csv',
             "start_date": "2017-05-01T00:00:00Z",
