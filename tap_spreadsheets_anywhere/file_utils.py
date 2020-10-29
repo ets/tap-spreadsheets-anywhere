@@ -24,7 +24,7 @@ def write_file(target_filename, table_spec, schema):
             '_smart_source_bucket': table_spec['path'],
             '_smart_source_file': target_filename,
             # index zero, +1 for header row
-            '_s3_source_lineno': records_synced + 2
+            '_smart_source_lineno': records_synced + 2
         }
 
         try:
