@@ -162,15 +162,19 @@ def list_files_in_local_bucket(bucket, search_prefix=None):
     max_results = 10000
     for (dirpath, dirnames, filenames) in walk(path):
         for filename in filenames:
-            local_filenames.append(filename)
+            abspath = os.path.join(dirpath,filename)
+            relpath = abspath[len(path)+1:]
+            local_filenames.append(relpath)
         if len(local_filenames) > max_results:
             raise ValueError(f"Read more than {max_results} records from the path {path}. Use a more specific "
                              f"search_prefix")
 
     LOGGER.info("Found {} files.".format(len(local_filenames)))
+    # for filename in local_filenames:
+    #     LOGGER.info(f"Found {filename} and {os.path.join(path, filename)} exists {os.path.exists(os.path.join(path, filename))}")
 
-    return [{'Key': filename, 'LastModified': datetime.fromtimestamp(os.path.getmtime(os.path.join(dirpath, filename)), timezone.utc)} for
-            filename in local_filenames]
+    return [{'Key': filename, 'LastModified': datetime.fromtimestamp(os.path.getmtime(os.path.join(path, filename)), timezone.utc)} for
+            filename in local_filenames if os.path.exists(os.path.join(path, filename))]
 
 def list_files_in_gs_bucket(bucket, search_prefix=None):
     gs_client = storage.Client()
