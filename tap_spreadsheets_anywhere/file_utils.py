@@ -93,6 +93,8 @@ def get_input_files_for_table(table_spec, modified_since=None):
         target_objects = list_files_in_s3_bucket(bucket, table_spec.get('search_prefix'))
     elif protocol == 'file':
         target_objects = list_files_in_local_bucket(bucket, table_spec.get('search_prefix'))
+    elif protocol in ["http", "https"]:
+        target_objects = list_files_in_http_bucket(table_spec['path'],table_spec.get('search_prefix'))
     elif protocol in ["sftp"]:
         target_objects = list_files_in_SSH_bucket(table_spec['path'],table_spec.get('search_prefix'))
     elif protocol in ["gs"]:
@@ -119,6 +121,10 @@ def get_input_files_for_table(table_spec, modified_since=None):
 
     return sorted(to_return, key=lambda item: item['last_modified'])
 
+def list_files_in_http_bucket(uri, search_prefix=None):
+    entries = [uri]
+    LOGGER.info("Found {} files.".format(entries))
+    return entries
 
 def list_files_in_SSH_bucket(uri, search_prefix=None):
     try:
