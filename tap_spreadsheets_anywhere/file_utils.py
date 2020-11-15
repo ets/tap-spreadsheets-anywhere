@@ -1,4 +1,5 @@
 import re
+import uuid
 from datetime import datetime, timezone
 
 import singer
@@ -217,3 +218,49 @@ def list_files_in_s3_bucket(bucket, search_prefix=None):
     LOGGER.info("Found {} files.".format(len(s3_objects)))
 
     return s3_objects
+
+
+def config_by_crawl(crawl_config):
+    config = {'tables': []}
+    for source in crawl_config:
+        entries = {}
+        target_files = get_matching_objects(source, modified_since=source[
+            'modified_since'] if 'modified_since' in source else None)
+        for file in target_files:
+            if not file['key'].endswith('/'):
+                dirs = file['key'].split('/')
+                table = re.sub(r'\W+', '', "_".join(dirs[0:-1]))
+                directory = "/".join(dirs[0:-1])
+                parts = file['key'].split('.')
+                # group all files in the same directory and with the same extension
+                if len(parts) > 1:
+                    rel_pattern = ".*" + parts[-1]
+                else:
+                    rel_pattern = parts[0]
+                abs_pattern = directory + '/' + rel_pattern
+                if table not in entries:
+                    entries[table] = {
+                        "path": source['path'],
+                        "name": table,
+                        "pattern": abs_pattern,
+                        "key_properties": [],
+                        "format": "detect",
+                        "delimiter": "detect"
+                    }
+                elif abs_pattern != entries[table]["pattern"]:
+                    # We've identified an additional pattern under the same table so give it a unique table name
+                    table_with_pattern = re.sub(r'\W+', '', table + '_' + rel_pattern)
+                    if table_with_pattern not in entries:
+                        entries[table_with_pattern] = {
+                            "path": source['path'],
+                            "name": table_with_pattern,
+                            "pattern": abs_pattern,
+                            "key_properties": [],
+                            "format": "detect",
+                            "delimiter": "detect"
+                        }
+
+            else:
+                LOGGER.debug(f"Skipping config for {file['key']} because it looks like a folder not a file")
+        config['tables'] += entries.values()
+        return config

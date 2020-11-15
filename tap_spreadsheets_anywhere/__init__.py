@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import re
 
 import dateutil
 import singer
@@ -118,48 +119,12 @@ REQUIRED_CONFIG_KEYS = 'tables'
 def main():
     # Parse command line arguments
     args = utils.parse_args([REQUIRED_CONFIG_KEYS])
-    if len(args.config['crawl']) > 0:
+    crawl_paths = [x for x in args.config['tables'] if "crawl_config" in x and x["crawl_config"]]
+    if len(crawl_paths) > 0:
         LOGGER.info("Executing experimental 'crawl' mode to auto-generate a table per bucket.")
-        config = {'tables': []}
-        for source in args.config['crawl']:
-            entries = {}
-            target_files = file_utils.get_matching_objects(source, modified_since=source['modified_since'] if 'modified_since' in source else None )
-            for file in target_files:
-                if not file['key'].endswith('/'):
-                    target_uri = source['path'] + '/' + file['key']
-                    dirs = file['key'].split('/')
-                    table = "_".join(dirs[0:-1])
-                    directory = "/".join(dirs[0:-1])
-                    parts = file['key'].split('.')
-                    # group all files in the same directory and with the same extension
-                    if len(parts) > 1:
-                        pattern = '.*\.'+parts[-1]
-                    else:
-                        pattern = parts[0]
-                    if table not in entries:
-                        entries[table] = {
-                            "path": source['path'],
-                            "name": table,
-                            "pattern": directory + '/' + pattern,
-                            "key_properties": [],
-                            "format": "detect",
-                            "delimiter": "detect"
-                        }
-                    else:
-                        if (directory + '/' + pattern) != entries[table]["pattern"]:
-                            unique_table = table+'_'+pattern
-                            entries[unique_table] = {
-                                "path": source['path'],
-                                "name": unique_table,
-                                "pattern": directory + '/' + pattern,
-                                "key_properties": [],
-                                "format": "detect",
-                                "delimiter": "detect"
-                            }
-                else:
-                    LOGGER.debug(f"Skipping config for {file['key']} because it looks like a folder not a file")
-            config['tables'] += entries.values()
-        Config.dump(config)
+        config_struct = file_utils.config_by_crawl(crawl_paths)
+        config_struct['tables'] += [x for x in args.config['tables'] if "crawl_config" not in x or not x["crawl_config"]]
+        Config.dump(config_struct)
     else:
         tables_config = Config.validate(args.config)
         # If discover flag was passed, run discovery mode and dump output to stdout

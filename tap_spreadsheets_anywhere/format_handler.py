@@ -109,7 +109,7 @@ def get_row_iterator(table_spec, uri):
             buf = reader.read(10)
             reader.seek(0)
             if len(buf) > 0:
-                if buf[0] == "{" or buf[0] == "[":
+                if buf[0].lstrip() == "[":
                     format = 'json'
                 elif buf[0].isprintable():
                     format = 'csv'
@@ -127,5 +127,7 @@ def get_row_iterator(table_spec, uri):
     elif format == 'excel':
         reader = get_streamreader(uri, universal_newlines=universal_newlines,newline=None, open_mode='rb')
         return tap_spreadsheets_anywhere.excel_handler.get_row_iterator(table_spec, reader)
-
+    elif format == 'json':
+        reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r')
+        return tap_spreadsheets_anywhere.json_handler.get_row_iterator(table_spec, reader)
 

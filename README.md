@@ -1,6 +1,6 @@
 # tap-spreadsheets-anywhere
 
-This is a [Singer](https://singer.io) tap that reads data from spreadsheet files (CSVs, Excel, custom-delimited) accessible from any [smart_open](https://github.com/RaRe-Technologies/smart_open) supported transport and produces JSON-formatted data following the [Singer spec](https://github.com/singer-io/getting-started/blob/master/SPEC.md). This tap is developed for compatibility with [Meltano](https://meltano.com/).
+This is a [Singer](https://singer.io) tap that reads data from spreadsheet files (CSVs, Excel, JSONs, custom-delimited) accessible from any [smart_open](https://github.com/RaRe-Technologies/smart_open) supported transport and produces JSON-formatted data following the [Singer spec](https://github.com/singer-io/getting-started/blob/master/SPEC.md). This tap is developed for compatibility with [Meltano](https://meltano.com/).
 
 ## How to use it
 
@@ -108,6 +108,35 @@ ies to your files.
 - **worksheet_name**: (optional) the worksheet name to pull from in the targeted xls file(s). Only required when format is excel
 - **delimiter**: (optional) the delimiter to use when format is 'csv'. Defaults to a comma ',' but you can set delimiter to 'detect' to leverage the csv "Sniffer" for auto-detecting delimiter. 
 - **quotechar**: (optional) the character used to surround values that may contain delimiters - defaults to a double quote '"'
+
+### Automatic Config Generation
+
+This is an experimental feature used to crawl a path and generate a config block for every file encountered. An intended 
+use-case is where source files are organized in subdirectories by intended target table. This mode will generate a config
+block for each subdirectory and for each file format within it. The following example config file will crawl the s3
+bucket my-example-bucket and produce config blocks for each folder under it where source files are detected.
+
+```
+{
+    "tables": [
+        {
+            "crawl_config": true,
+            "path": "s3://my-example-bucket",
+            "pattern": ".*"
+        }
+    ]
+}
+```  
+
+### JSON support
+
+JSON files are expected to parse as a root-level array of objects where each object is a set of flat key-value pairs.
+```
+[
+    { "name": "row one", "key": 42},
+    { "name": "row two", "key": 43}
+]
+``` 
 
 ### Authentication and Credentials
 
