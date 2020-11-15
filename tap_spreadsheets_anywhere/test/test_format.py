@@ -4,7 +4,7 @@ import unittest
 import dateutil
 import smart_open
 
-from tap_spreadsheets_anywhere import configuration, file_utils, csv_handler
+from tap_spreadsheets_anywhere import configuration, file_utils, csv_handler, json_handler
 from tap_spreadsheets_anywhere.format_handler import monkey_patch_streamreader, get_row_iterator
 
 TEST_TABLE_SPEC = {
@@ -47,6 +47,23 @@ TEST_TABLE_SPEC = {
             "key_properties": [],
             "format": "excel",
             "worksheet_name": "sample_with_bad_newlines"
+        },
+        {
+            "path": "file://./tap_spreadsheets_anywhere/test",
+            "name": "badnewlines",
+            "pattern": ".*\\.json",
+            "start_date": "2017-05-01T00:00:00Z",
+            "key_properties": [],
+            "format": "detect"
+        },
+        {
+            "path": "https://www.treasury.gov/ofac/downloads",
+            "name": "sdn",
+            "pattern": "sdn.csv",
+            "start_date": "1970-05-01T00:00:00Z",
+            "key_properties": [],
+            "format": "csv",
+            "field_names": ["id","name","a" ,"country","b" ,"c" ,"d" ,"e" ,"f" ,"g" ,"h" ,"i"]
         }
     ]
 }
@@ -60,6 +77,14 @@ class TestFormatHandler(unittest.TestCase):
     def test_handle_newlines_local_excel(self):
         test_filename_uri = './tap_spreadsheets_anywhere/test/excel_with_bad_newlines.xlsx'
         iterator = get_row_iterator(TEST_TABLE_SPEC['tables'][2], test_filename_uri)
+
+        for row in iterator:
+            self.assertTrue(isinstance(row['id'], float) or isinstance(row['id'], int),
+                            "Parsed ID is not a number for: {}".format(row['id']))
+
+    def test_handle_newlines_local_json(self):
+        test_filename_uri = './tap_spreadsheets_anywhere/test/sample.json'
+        iterator = get_row_iterator(TEST_TABLE_SPEC['tables'][3], test_filename_uri)
 
         for row in iterator:
             self.assertTrue(isinstance(row['id'], float) or isinstance(row['id'], int),
@@ -89,3 +114,15 @@ class TestFormatHandler(unittest.TestCase):
         modified_since = dateutil.parser.parse(table_spec['start_date'])
         target_files = file_utils.get_matching_objects(table_spec, modified_since)
         assert len(target_files) == 1
+
+    def test_https_bucket(self):
+        table_spec = TEST_TABLE_SPEC['tables'][4]
+        modified_since = dateutil.parser.parse(table_spec['start_date'])
+        target_files = file_utils.get_matching_objects(table_spec, modified_since)
+        assert len(target_files) == 1
+
+        target_uri = table_spec['path'] + '/' + target_files[0]["key"]
+        iterator = get_row_iterator(TEST_TABLE_SPEC['tables'][4], target_uri)
+
+        row = next(iterator)
+        self.assertTrue(row['id'] == '36',row['id']+" was not 36")

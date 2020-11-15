@@ -1,7 +1,7 @@
 import re
 import uuid
 from datetime import datetime, timezone
-
+import requests
 import singer
 import boto3
 from google.cloud import storage
@@ -10,6 +10,7 @@ from os import walk
 import tap_spreadsheets_anywhere.format_handler
 import tap_spreadsheets_anywhere.conversion as conversion
 import smart_open.ssh as ssh_transport
+from dateutil.parser import parse as parsedate
 
 LOGGER = singer.get_logger()
 
@@ -97,7 +98,9 @@ def get_matching_objects(table_spec, modified_since=None):
     elif protocol in ["sftp"]:
         target_objects = list_files_in_SSH_bucket(table_spec['path'],table_spec.get('search_prefix'))
     elif protocol in ["gs"]:
-        target_objects = list_files_in_gs_bucket(bucket,table_spec.get('search_prefix'))        
+        target_objects = list_files_in_gs_bucket(bucket,table_spec.get('search_prefix'))
+    elif protocol in ["http", "https"]:
+        target_objects = convert_URL_to_file_list(table_spec)
     else:
         raise ValueError("Protocol {} not yet supported. Pull Requests are welcome!")
 
@@ -151,6 +154,19 @@ def list_files_in_SSH_bucket(uri, search_prefix=None):
 
     LOGGER.info("Found {} files.".format(entries))
     return entries
+
+def convert_URL_to_file_list(table_spec):
+    url = table_spec["path"] + "/" + table_spec["pattern"]
+    LOGGER.info(f"Assembled {url} as the URL to a source file.")
+    r = requests.head(url)
+    if r:
+        url_time = r.headers['last-modified']
+        url_date = parsedate(url_time)
+    else:
+        raise ValueError(f"Configured URL {url} could not be read.")
+
+    return [{'Key': table_spec["pattern"], 'LastModified': url_date}]
+
 
 
 def list_files_in_local_bucket(bucket, search_prefix=None):

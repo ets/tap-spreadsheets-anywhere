@@ -29,8 +29,9 @@ def get_row_iterator(table_spec, reader):
 
     dialect = 'excel'
     if 'delimiter' not in table_spec or table_spec['delimiter'] == 'detect':
-        dialect = csv.Sniffer().sniff(reader.read(1024), delimiters=',;|\t: ')
-        reader.seek(0)
+        dialect = csv.Sniffer().sniff(reader.readline(), delimiters=[',', '\t', ';', ' ', ':', '|', ' '])
+        if reader.seekable():
+            reader.seek(0)
     else:
         custom_delimiter = table_spec.get('delimiter', ',')
         custom_quotechar = table_spec.get('quotechar', '"')

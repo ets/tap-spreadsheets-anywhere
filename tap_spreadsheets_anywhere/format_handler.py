@@ -3,6 +3,7 @@ import smart_open
 from codecs import StreamReader
 import tap_spreadsheets_anywhere.csv_handler
 import tap_spreadsheets_anywhere.excel_handler
+import tap_spreadsheets_anywhere.json_handler
 
 
 def get_streamreader(uri, universal_newlines=True,newline='',open_mode='r'):
