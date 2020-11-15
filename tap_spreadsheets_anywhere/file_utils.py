@@ -85,7 +85,7 @@ def parse_path(path):
     return ('local', path_parts[0]) if len(path_parts) <= 1 else (path_parts[0], path_parts[1])
 
 
-def get_input_files_for_table(table_spec, modified_since=None):
+def get_matching_objects(table_spec, modified_since=None):
     protocol, bucket = parse_path(table_spec['path'])
 
     # TODO Breakout the transport schemes here similar to the registry/loading pattern used by smart_open
@@ -111,11 +111,11 @@ def get_input_files_for_table(table_spec, modified_since=None):
 
         # noinspection PyTypeChecker
         if matcher.search(key) and (modified_since is None or modified_since < last_modified):
-            LOGGER.debug('Will download key "{}"'.format(key))
+            LOGGER.debug('Including key "{}"'.format(key))
             LOGGER.debug('Last modified: {}'.format(last_modified) + ' comparing to {} '.format(modified_since))
             to_return.append({'key': key, 'last_modified': last_modified})
         else:
-            LOGGER.debug('Will not download key "{}"'.format(key))
+            LOGGER.debug('Not including key "{}"'.format(key))
 
     return sorted(to_return, key=lambda item: item['last_modified'])
 
@@ -179,7 +179,7 @@ def list_files_in_local_bucket(bucket, search_prefix=None):
 def list_files_in_gs_bucket(bucket, search_prefix=None):
     gs_client = storage.Client()
         
-    blobs = storage_client.list_blobs(bucket, prefix=search_prefix)
+    blobs = gs_client.list_blobs(bucket, prefix=search_prefix)
 
     LOGGER.info("Found {} files.".format(len(blobs)))
 

@@ -4,7 +4,7 @@ import unittest
 import dateutil
 import smart_open
 
-from tap_spreadsheets_anywhere import tables_config_util, file_utils, csv_handler
+from tap_spreadsheets_anywhere import configuration, file_utils, csv_handler
 from tap_spreadsheets_anywhere.format_handler import monkey_patch_streamreader, get_row_iterator
 
 TEST_TABLE_SPEC = {
@@ -55,7 +55,7 @@ TEST_TABLE_SPEC = {
 class TestFormatHandler(unittest.TestCase):
 
     def test_custom_config(self):
-        tables_config_util.CONFIG_CONTRACT(TEST_TABLE_SPEC)
+        configuration.CONFIG_CONTRACT(TEST_TABLE_SPEC)
 
     def test_handle_newlines_local_excel(self):
         test_filename_uri = './tap_spreadsheets_anywhere/test/excel_with_bad_newlines.xlsx'
@@ -87,5 +87,5 @@ class TestFormatHandler(unittest.TestCase):
     def test_local_bucket(self):
         table_spec = TEST_TABLE_SPEC['tables'][1]
         modified_since = dateutil.parser.parse(table_spec['start_date'])
-        target_files = file_utils.get_input_files_for_table(table_spec, modified_since)
+        target_files = file_utils.get_matching_objects(table_spec, modified_since)
         assert len(target_files) == 1

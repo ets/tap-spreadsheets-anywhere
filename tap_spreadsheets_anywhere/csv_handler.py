@@ -27,15 +27,19 @@ def get_row_iterator(table_spec, reader):
     if 'field_names' in table_spec:
         field_names = table_spec['field_names']
 
-    custom_delimiter = table_spec.get('delimiter', ',')
-    custom_quotechar = table_spec.get('quotechar', '"')
     dialect = 'excel'
-    if custom_delimiter != ',' or custom_quotechar != '"':
-        class custom_dialect(csv.excel):
-            delimiter = custom_delimiter
-            quotechar = custom_quotechar
-        dialect = 'custom_dialect'
-        csv.register_dialect(dialect, custom_dialect)
+    if 'delimiter' not in table_spec or table_spec['delimiter'] == 'detect':
+        dialect = csv.Sniffer().sniff(reader.read(1024), delimiters=',;|\t: ')
+        reader.seek(0)
+    else:
+        custom_delimiter = table_spec.get('delimiter', ',')
+        custom_quotechar = table_spec.get('quotechar', '"')
+        if custom_delimiter != ',' or custom_quotechar != '"':
+            class custom_dialect(csv.excel):
+                delimiter = custom_delimiter
+                quotechar = custom_quotechar
+            dialect = 'custom_dialect'
+            csv.register_dialect(dialect, custom_dialect)
 
     reader = csv.DictReader(reader, fieldnames=field_names, dialect=dialect)
     return generator_wrapper(reader)

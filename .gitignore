@@ -98,7 +98,7 @@ ENV/
 # Custom stuff
 env.sh
 tables-config.json
-config.json
+config*.json
 .autoenv.zsh
 catalog.json
 stream.json

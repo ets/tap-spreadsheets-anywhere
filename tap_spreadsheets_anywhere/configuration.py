@@ -1,10 +1,10 @@
+'''Provides an object model for a our config file'''
 import json
-from json.decoder import JSONDecodeError
-
 import singer
+import sys
 
 from voluptuous import Schema, Required, Any, Optional
-logger = singer.get_logger()
+LOGGER = singer.get_logger()
 
 CONFIG_CONTRACT = Schema({
     Required('tables'): [{
@@ -13,7 +13,7 @@ CONFIG_CONTRACT = Schema({
         Required('pattern'): str,
         Required('start_date'): str,
         Required('key_properties'): [str],
-        Required('format'): Any('csv', 'excel'),
+        Required('format'): Any('csv', 'excel', 'json', 'detect'),
         Optional('universal_newlines'): bool,
         Optional('selected'): bool,
         Optional('field_names'): [str],
@@ -34,7 +34,18 @@ CONFIG_CONTRACT = Schema({
     }]
 })
 
+class Config():
 
-def validate(config_json):
-    CONFIG_CONTRACT(config_json)
-    return config_json
+    @classmethod
+    def dump(cls, config_json):
+        json.dump(config_json, sys.stdout, indent=2)
+
+    @classmethod
+    def validate(cls, config_json):
+        CONFIG_CONTRACT(config_json)
+        return config_json
+
+    @classmethod
+    def load(cls, filename):
+        with open(filename) as fp:  # pylint: disable=invalid-name
+            return Config.validate(json.load(fp))

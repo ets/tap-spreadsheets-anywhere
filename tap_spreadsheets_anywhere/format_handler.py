@@ -95,10 +95,36 @@ def mp_readline(self, size=None, keepends=False):
 def get_row_iterator(table_spec, uri):
     universal_newlines = table_spec['universal_newlines'] if 'universal_newlines' in table_spec else True
 
-    if table_spec['format'] == 'csv':
+    if 'format' not in table_spec or table_spec['format'] == 'detect':
+        lowered_uri = uri.lower()
+        if lowered_uri.endswith(".xls") or lowered_uri.endswith(".xlsx"):
+            format = 'excel'
+        elif lowered_uri.endswith(".json") or lowered_uri.endswith(".js"):
+            format = 'json'
+        elif lowered_uri.endswith(".csv"):
+            format = 'csv'
+        else:
+            # TODO: some protocols provide the ability to pull format (content-type) info & we could make use of that here
+            reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r')
+            buf = reader.read(10)
+            reader.seek(0)
+            if len(buf) > 0:
+                if buf[0] == "{" or buf[0] == "[":
+                    format = 'json'
+                elif buf[0].isprintable():
+                    format = 'csv'
+                else:
+                    raise ValueError(f"Unable to detect the format for {uri}")
+            else:
+                raise ValueError(f"Unable to read {uri} for type detection")
+
+    else:
+        format = table_spec['format']
+
+    if format == 'csv':
         reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r')
         return tap_spreadsheets_anywhere.csv_handler.get_row_iterator(table_spec, reader)
-    elif table_spec['format'] == 'excel':
+    elif format == 'excel':
         reader = get_streamreader(uri, universal_newlines=universal_newlines,newline=None, open_mode='rb')
         return tap_spreadsheets_anywhere.excel_handler.get_row_iterator(table_spec, reader)
 
