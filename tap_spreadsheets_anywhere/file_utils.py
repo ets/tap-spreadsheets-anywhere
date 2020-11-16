@@ -261,7 +261,8 @@ def config_by_crawl(crawl_config):
                         "pattern": abs_pattern,
                         "key_properties": [],
                         "format": "detect",
-                        "delimiter": "detect"
+                        "delimiter": "detect",
+                        "start_date": "1970-01-01T00:00:00Z"
                     }
                 elif abs_pattern != entries[table]["pattern"]:
                     # We've identified an additional pattern under the same table so give it a unique table name
@@ -273,7 +274,8 @@ def config_by_crawl(crawl_config):
                             "pattern": abs_pattern,
                             "key_properties": [],
                             "format": "detect",
-                            "delimiter": "detect"
+                            "delimiter": "detect",
+                            "start_date": "1970-01-01T00:00:00Z"
                         }
 
             else:
