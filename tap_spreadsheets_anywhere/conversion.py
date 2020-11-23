@@ -8,8 +8,11 @@ LOGGER = singer.get_logger()
 def convert_row(row, schema):
     to_return = {}
     for key, value in row.items():
-        field_schema = schema['properties'][key]
-        declared_types = field_schema.get('type', 'string')
+        if key in schema['properties']:
+            field_schema = schema['properties'][key]
+            declared_types = field_schema.get('type', 'string')
+        else:
+            declared_types = ['string','null']
 
         LOGGER.debug('Converting {} value {} to {}'.format(key, value, declared_types))
         coerced = coerce(value, declared_types)
