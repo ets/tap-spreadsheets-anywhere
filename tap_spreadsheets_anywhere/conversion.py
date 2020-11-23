@@ -44,7 +44,7 @@ def convert(datum, desired_type=None):
     if desired_type in (None, 'integer'):
         try:
             datum_int = int(datum)  # Confirm it can be coerced to int
-            if not datum.lstrip("-+").isdigit():
+            if not str(datum).lstrip("-+").isdigit():
                 raise TypeError
             return datum_int, 'integer',
         except (ValueError, TypeError):
