@@ -216,20 +216,20 @@ def list_files_in_s3_bucket(bucket, search_prefix=None):
         args['Prefix'] = search_prefix
 
     result = s3_client.list_objects_v2(**args)
-
-    s3_objects += result['Contents']
-    next_continuation_token = result.get('NextContinuationToken')
-
-    while next_continuation_token is not None:
-        LOGGER.debug('Continuing pagination with token "{}".'.format(next_continuation_token))
-
-        continuation_args = args.copy()
-        continuation_args['ContinuationToken'] = next_continuation_token
-
-        result = s3_client.list_objects_v2(**continuation_args)
-
+    if result['KeyCount'] > 0:
         s3_objects += result['Contents']
         next_continuation_token = result.get('NextContinuationToken')
+
+        while next_continuation_token is not None:
+            LOGGER.debug('Continuing pagination with token "{}".'.format(next_continuation_token))
+
+            continuation_args = args.copy()
+            continuation_args['ContinuationToken'] = next_continuation_token
+
+            result = s3_client.list_objects_v2(**continuation_args)
+
+            s3_objects += result['Contents']
+            next_continuation_token = result.get('NextContinuationToken')
 
     LOGGER.info("Found {} files.".format(len(s3_objects)))
 
