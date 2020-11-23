@@ -258,6 +258,7 @@ def config_by_crawl(crawl_config):
                     entries[table] = {
                         "path": source['path'],
                         "name": table,
+                        "search_prefix": directory,
                         "pattern": abs_pattern,
                         "key_properties": [],
                         "format": "detect",
@@ -271,6 +272,7 @@ def config_by_crawl(crawl_config):
                         entries[table_with_pattern] = {
                             "path": source['path'],
                             "name": table_with_pattern,
+                            "search_prefix": directory,
                             "pattern": abs_pattern,
                             "key_properties": [],
                             "format": "detect",
