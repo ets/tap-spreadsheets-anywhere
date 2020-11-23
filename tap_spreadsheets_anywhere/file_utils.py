@@ -253,7 +253,7 @@ def config_by_crawl(crawl_config):
                     rel_pattern = ".*" + parts[-1]
                 else:
                     rel_pattern = parts[0]
-                abs_pattern = directory + '/' + rel_pattern
+                abs_pattern = directory + '/' + rel_pattern + '$'
                 if table not in entries:
                     entries[table] = {
                         "path": source['path'],
