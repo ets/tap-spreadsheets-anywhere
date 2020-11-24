@@ -18,27 +18,32 @@ LOGGER = singer.get_logger()
 def write_file(target_filename, table_spec, schema):
     LOGGER.info('Syncing file "{}".'.format(target_filename))
     target_uri = table_spec['path'] + '/' + target_filename
-    iterator = tap_spreadsheets_anywhere.format_handler.get_row_iterator(table_spec, target_uri)
     records_synced = 0
+    try:
+        iterator = tap_spreadsheets_anywhere.format_handler.get_row_iterator(table_spec, target_uri)
+        for row in iterator:
+            metadata = {
+                '_smart_source_bucket': table_spec['path'],
+                '_smart_source_file': target_filename,
+                # index zero, +1 for header row
+                '_smart_source_lineno': records_synced + 2
+            }
 
-    for row in iterator:
-        metadata = {
-            '_smart_source_bucket': table_spec['path'],
-            '_smart_source_file': target_filename,
-            # index zero, +1 for header row
-            '_smart_source_lineno': records_synced + 2
-        }
+            try:
+                to_write = [{**conversion.convert_row(row, schema), **metadata}]
+                singer.write_records(table_spec['name'], to_write)
+            except BrokenPipeError as bpe:
+                LOGGER.error(
+                    f'Pipe to loader broke after {records_synced} records were written from {target_filename}: troubled '
+                    f'line was {to_write[0]}')
+                raise bpe
 
-        try:
-            to_write = [{**conversion.convert_row(row, schema), **metadata}]
-            singer.write_records(table_spec['name'], to_write)
-        except BrokenPipeError as bpe:
-            LOGGER.error(
-                f'Pipe to loader broke after {records_synced} records were written from {target_filename}: troubled '
-                f'line was {to_write[0]}')
-            raise bpe
-
-        records_synced += 1
+            records_synced += 1
+    except tap_spreadsheets_anywhere.InvalidFormatError as ife:
+        if table_spec.get('invalid_format_action','fail').lower() != "ignore":
+            raise ife
+        else:
+            LOGGER.exception(f"Unable to parse {target_filename}",ife)
 
     return records_synced
 
@@ -48,21 +53,25 @@ def sample_file(table_spec, target_filename, sample_rate, max_records):
                 .format(target_filename, max_records, sample_rate))
 
     target_uri = table_spec['path'] + '/' + target_filename
-    iterator = tap_spreadsheets_anywhere.format_handler.get_row_iterator(table_spec, target_uri)
     samples = []
     current_row = 0
+    try:
+        iterator = tap_spreadsheets_anywhere.format_handler.get_row_iterator(table_spec, target_uri)
 
-    for row in iterator:
-        if (current_row % sample_rate) == 0:
-            samples.append(row)
+        for row in iterator:
+            if (current_row % sample_rate) == 0:
+                samples.append(row)
 
-        current_row += 1
-
-        if len(samples) >= max_records:
-            break
+            current_row += 1
+            if len(samples) >= max_records:
+                break
+    except tap_spreadsheets_anywhere.InvalidFormatError as ife:
+        if table_spec.get('invalid_format_action','fail').lower() != "ignore":
+            raise ife
+        else:
+            LOGGER.exception(f"Unable to parse {target_filename}",ife)
 
     LOGGER.info('Sampled {} records.'.format(len(samples)))
-
     return samples
 
 

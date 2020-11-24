@@ -6,6 +6,16 @@ import tap_spreadsheets_anywhere.excel_handler
 import tap_spreadsheets_anywhere.json_handler
 
 
+class InvalidFormatError(Exception):
+    def __init__(self, fname, message="The file was not in the expected format"):
+        self.name = fname
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'{self.name} could not be parsed: {self.message}'
+
+
 def get_streamreader(uri, universal_newlines=True,newline='',open_mode='r'):
     streamreader = smart_open.open(uri, open_mode, newline=newline, errors='surrogateescape')
     if not universal_newlines and isinstance(streamreader, StreamReader):
@@ -122,13 +132,16 @@ def get_row_iterator(table_spec, uri):
     else:
         format = table_spec['format']
 
-    if format == 'csv':
-        reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r')
-        return tap_spreadsheets_anywhere.csv_handler.get_row_iterator(table_spec, reader)
-    elif format == 'excel':
-        reader = get_streamreader(uri, universal_newlines=universal_newlines,newline=None, open_mode='rb')
-        return tap_spreadsheets_anywhere.excel_handler.get_row_iterator(table_spec, reader)
-    elif format == 'json':
-        reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r')
-        return tap_spreadsheets_anywhere.json_handler.get_row_iterator(table_spec, reader)
+    try:
+        if format == 'csv':
+            reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r')
+            return tap_spreadsheets_anywhere.csv_handler.get_row_iterator(table_spec, reader)
+        elif format == 'excel':
+            reader = get_streamreader(uri, universal_newlines=universal_newlines,newline=None, open_mode='rb')
+            return tap_spreadsheets_anywhere.excel_handler.get_row_iterator(table_spec, reader)
+        elif format == 'json':
+            reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r')
+            return tap_spreadsheets_anywhere.json_handler.get_row_iterator(table_spec, reader)
+    except Exception as err:
+        raise InvalidFormatError(uri,message=err)
 

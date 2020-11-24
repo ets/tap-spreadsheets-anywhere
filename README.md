@@ -97,6 +97,8 @@ Each object in the 'tables' array describes one or more CSV or Excel spreadsheet
 - **start_date**: This is the datetime that the tap will use to filter files, based on the modified timestamp of the file.
 - **key_properties**: These are the "primary keys" of the CSV files, to be used by the target for deduplication and primary key definitions downstream in the destination.
 - **format**: Must be either 'csv', 'json', 'excel', or 'detect'. Note that csv can be further customized with delimiter and quotechar variables below.
+- **invalid_format_action**: (optional) By default, the tap will raise an exception if a source file can not be read
+. Set this key to "ignore" to skip such source files and continue the run.  
 - **field_names**: (optional) An array holding the names of the columns in the targeted files. If not supplied, the first row of each file must hold the desired values. 
 - **universal_newlines**: (optional) Should the source file parsers honor [universal newlines](https://docs.python.org/2.3/whatsnew/node7.html)). Setting this to false will instruct the parser to only consider '\n' as a valid newline identifier.
 - **sample_rate**: (optional) The sampling rate to apply when reading a source file for sampling in discovery mode. A sampling rate of 1 will sample every line.  A sampling rate of 10 (the default) will sample every 10th line.
