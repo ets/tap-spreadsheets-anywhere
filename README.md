@@ -130,6 +130,13 @@ bucket my-example-bucket and produce config blocks for each folder under it wher
 }
 ```  
 
+Typically this mode will be used when there are many streams to be configured and processed. Therefore, generating the
+ catalog independently is generally helpful.
+```bash
+meltano invoke --dump=catalog tap-spreadsheets-anywhere > my-catalog.json
+meltano elt --catalog=my-catalog.json --job_id=my-job-state tap-spreadsheets-anywhere any-loader
+``` 
+
 ### JSON support
 
 JSON files are expected to parse as a root-level array of objects where each object is a set of flat key-value pairs.
