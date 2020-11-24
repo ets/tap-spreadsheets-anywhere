@@ -44,47 +44,51 @@ def override_schema_with_config(inferred_schema, table_spec):
 def discover(config):
     streams = []
     for table_spec in config['tables']:
-        modified_since = dateutil.parser.parse(table_spec['start_date'])
-        target_files = file_utils.get_matching_objects(table_spec, modified_since)
-        sample_rate = table_spec.get('sample_rate',10)
-        max_sampling_read = table_spec.get('max_sampling_read', 1000)
-        max_sampled_files = table_spec.get('max_sampled_files', 5)
-        prefer_number_vs_integer = table_spec.get('prefer_number_vs_integer', False)
-        samples = file_utils.sample_files(table_spec, target_files,sample_rate=sample_rate,
-                                          max_records=max_sampling_read, max_files=max_sampled_files)
+        try:
+            modified_since = dateutil.parser.parse(table_spec['start_date'])
+            target_files = file_utils.get_matching_objects(table_spec, modified_since)
+            sample_rate = table_spec.get('sample_rate',10)
+            max_sampling_read = table_spec.get('max_sampling_read', 1000)
+            max_sampled_files = table_spec.get('max_sampled_files', 5)
+            prefer_number_vs_integer = table_spec.get('prefer_number_vs_integer', False)
+            samples = file_utils.sample_files(table_spec, target_files,sample_rate=sample_rate,
+                                              max_records=max_sampling_read, max_files=max_sampled_files)
 
-        metadata_schema = {
-            '_smart_source_bucket': {'type': 'string'},
-            '_smart_source_file': {'type': 'string'},
-            '_smart_source_lineno': {'type': 'integer'},
-        }
-        data_schema = conversion.generate_schema(samples,prefer_number_vs_integer=prefer_number_vs_integer)
-        inferred_schema = {
-            'type': 'object',
-            'properties': merge_dicts(data_schema, metadata_schema)
-        }
+            metadata_schema = {
+                '_smart_source_bucket': {'type': 'string'},
+                '_smart_source_file': {'type': 'string'},
+                '_smart_source_lineno': {'type': 'integer'},
+            }
+            data_schema = conversion.generate_schema(samples,prefer_number_vs_integer=prefer_number_vs_integer)
+            inferred_schema = {
+                'type': 'object',
+                'properties': merge_dicts(data_schema, metadata_schema)
+            }
 
-        merged_schema = override_schema_with_config(inferred_schema, table_spec)
-        schema = Schema.from_dict(merged_schema)
+            merged_schema = override_schema_with_config(inferred_schema, table_spec)
+            schema = Schema.from_dict(merged_schema)
 
-        stream_metadata = []
-        key_properties = table_spec.get('key_properties', [])
-        streams.append(
-            CatalogEntry(
-                tap_stream_id=table_spec['name'],
-                stream=table_spec['name'],
-                schema=schema,
-                key_properties=key_properties,
-                metadata=stream_metadata,
-                replication_key=None,
-                is_view=None,
-                database=None,
-                table=None,
-                row_count=None,
-                stream_alias=None,
-                replication_method=None,
+            stream_metadata = []
+            key_properties = table_spec.get('key_properties', [])
+            streams.append(
+                CatalogEntry(
+                    tap_stream_id=table_spec['name'],
+                    stream=table_spec['name'],
+                    schema=schema,
+                    key_properties=key_properties,
+                    metadata=stream_metadata,
+                    replication_key=None,
+                    is_view=None,
+                    database=None,
+                    table=None,
+                    row_count=None,
+                    stream_alias=None,
+                    replication_method=None,
+                )
             )
-        )
+        except Exception as err:
+            LOGGER.error(f"Unable to write Catalog entry for '{table_spec['name']}' - it will be skipped due to error {err}")
+
     return Catalog(streams)
 
 
@@ -120,26 +124,31 @@ def main():
     # Parse command line arguments
     args = utils.parse_args([REQUIRED_CONFIG_KEYS])
     crawl_paths = [x for x in args.config['tables'] if "crawl_config" in x and x["crawl_config"]]
-    if len(crawl_paths) > 0:
+    if len(crawl_paths) > 0: # Our config includes at least one crawl block
         LOGGER.info("Executing experimental 'crawl' mode to auto-generate a table per bucket.")
-        config_struct = file_utils.config_by_crawl(crawl_paths)
-        config_struct['tables'] += [x for x in args.config['tables'] if "crawl_config" not in x or not x["crawl_config"]]
-        Config.dump(config_struct)
+        tables_config = file_utils.config_by_crawl(crawl_paths)
+        # Add back in the non-crawl blocks
+        tables_config['tables'] += [x for x in args.config['tables'] if "crawl_config" not in x or not x["crawl_config"]]
+        crawl_results_file = "crawled-config.json"
+        LOGGER.info(f"Writing expanded crawl blocks to {crawl_results_file}.")
+        Config.dump(tables_config, filename=crawl_results_file)
     else:
-        tables_config = Config.validate(args.config)
-        # If discover flag was passed, run discovery mode and dump output to stdout
-        if args.discover:
-            catalog = discover(tables_config)
-            catalog.dump()
-        # Otherwise run in sync mode
+        tables_config = args.config
+
+    tables_config = Config.validate(tables_config)
+    # If discover flag was passed, run discovery mode and dump output to stdout
+    if args.discover:
+        catalog = discover(tables_config)
+        catalog.dump()
+    # Otherwise run in sync mode
+    else:
+        if args.catalog:
+            catalog = args.catalog
+            LOGGER.info(f"Using supplied catalog {args.catalog_path}.")
         else:
-            if args.catalog:
-                catalog = args.catalog
-                LOGGER.info(f"Using supplied catalog {args.catalog_path}.")
-            else:
-                LOGGER.info(f"Generating catalog through sampling.")
-                catalog = discover(tables_config)
-            sync(tables_config, args.state, catalog)
+            LOGGER.info(f"Generating catalog through sampling.")
+            catalog = discover(tables_config)
+        sync(tables_config, args.state, catalog)
 
 if __name__ == "__main__":
     main()

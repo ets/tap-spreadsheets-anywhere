@@ -38,8 +38,8 @@ CONFIG_CONTRACT = Schema({
 class Config():
 
     @classmethod
-    def dump(cls, config_json):
-        json.dump(config_json, sys.stdout, indent=2)
+    def dump(cls, config_json, filename="crawled-config.json"):
+        json.dump(config_json, filename, indent=2)
 
     @classmethod
     def validate(cls, config_json):

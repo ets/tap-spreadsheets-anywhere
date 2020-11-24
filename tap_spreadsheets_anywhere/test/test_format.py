@@ -125,4 +125,4 @@ class TestFormatHandler(unittest.TestCase):
         iterator = get_row_iterator(TEST_TABLE_SPEC['tables'][4], target_uri)
 
         row = next(iterator)
-        self.assertTrue(row['id'] == '36',row['id']+" was not 36")
+        self.assertTrue(int(row['id']) > 0,row['id']+" was not positive")

@@ -5,10 +5,10 @@ import singer
 
 LOGGER = singer.get_logger()
 
-def generator_wrapper(root_array):
-    for row in root_array:
+def generator_wrapper(root_iterator):
+    for obj in root_iterator:
         to_return = {}
-        for key, value in row.items():
+        for key, value in obj.items():
             if key is None:
                 key = '_smart_extra'
 
@@ -22,5 +22,8 @@ def generator_wrapper(root_array):
 
 
 def get_row_iterator(table_spec, reader):
-    root_array = json.load(reader)
-    return generator_wrapper(root_array)
+    json_obj = json.load(reader)
+    # throw a TypeError if the root json object can not be iterated
+    return generator_wrapper(iter(json_obj))
+
+
