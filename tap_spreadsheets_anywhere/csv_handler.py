@@ -2,8 +2,6 @@ import csv
 import re
 import singer
 
-from tap_spreadsheets_anywhere.format_handler import InvalidFormatError
-
 LOGGER = singer.get_logger()
 
 def generator_wrapper(reader):
