@@ -2,6 +2,8 @@ import csv
 import re
 import singer
 
+from tap_spreadsheets_anywhere.format_handler import InvalidFormatError
+
 LOGGER = singer.get_logger()
 
 def generator_wrapper(reader):
@@ -29,9 +31,12 @@ def get_row_iterator(table_spec, reader):
 
     dialect = 'excel'
     if 'delimiter' not in table_spec or table_spec['delimiter'] == 'detect':
-        dialect = csv.Sniffer().sniff(reader.readline(), delimiters=[',', '\t', ';', ' ', ':', '|', ' '])
-        if reader.seekable():
-            reader.seek(0)
+        try:
+            dialect = csv.Sniffer().sniff(reader.readline(), delimiters=[',', '\t', ';', ' ', ':', '|', ' '])
+            if reader.seekable():
+                reader.seek(0)
+        except Exception as err:
+            raise ValueError("Unable to sniff a delimiter")
     else:
         custom_delimiter = table_spec.get('delimiter', ',')
         custom_quotechar = table_spec.get('quotechar', '"')
