@@ -40,10 +40,10 @@ def write_file(target_filename, table_spec, schema):
 
             records_synced += 1
     except tap_spreadsheets_anywhere.format_handler.InvalidFormatError as ife:
-        if table_spec.get('invalid_format_action','fail').lower() != "ignore":
-            raise ife
+        if table_spec.get('invalid_format_action','fail').lower() == "ignore":
+            LOGGER.exception(f"Ignoring unparseable file: {target_filename}",ife)
         else:
-            LOGGER.exception(f"Unable to parse {target_filename}",ife)
+            raise ife
 
     return records_synced
 

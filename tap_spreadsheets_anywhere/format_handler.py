@@ -142,6 +142,6 @@ def get_row_iterator(table_spec, uri):
         elif format == 'json':
             reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r')
             return tap_spreadsheets_anywhere.json_handler.get_row_iterator(table_spec, reader)
-    except Exception as err:
+    except (ValueError,TypeError) as err:
         raise InvalidFormatError(uri,message=err)
 
