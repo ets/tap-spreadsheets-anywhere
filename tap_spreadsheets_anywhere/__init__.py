@@ -131,7 +131,7 @@ def main():
         tables_config['tables'] += [x for x in args.config['tables'] if "crawl_config" not in x or not x["crawl_config"]]
         crawl_results_file = "crawled-config.json"
         LOGGER.info(f"Writing expanded crawl blocks to {crawl_results_file}.")
-        Config.dump(tables_config, filename=crawl_results_file)
+        Config.dump(tables_config, open(crawl_results_file, "w"))
     else:
         tables_config = args.config
 
