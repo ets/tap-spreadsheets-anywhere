@@ -271,6 +271,7 @@ def config_by_crawl(crawl_config):
                         "pattern": abs_pattern,
                         "key_properties": [],
                         "format": "detect",
+                        "invalid_format_action": "ignore",
                         "delimiter": "detect",
                         "start_date": "1970-01-01T00:00:00Z"
                     }
@@ -285,6 +286,7 @@ def config_by_crawl(crawl_config):
                             "pattern": abs_pattern,
                             "key_properties": [],
                             "format": "detect",
+                            "invalid_format_action": "ignore",
                             "delimiter": "detect",
                             "start_date": "1970-01-01T00:00:00Z"
                         }
