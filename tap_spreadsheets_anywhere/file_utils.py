@@ -39,7 +39,7 @@ def write_file(target_filename, table_spec, schema):
                 raise bpe
 
             records_synced += 1
-    except tap_spreadsheets_anywhere.InvalidFormatError as ife:
+    except tap_spreadsheets_anywhere.format_handler.InvalidFormatError as ife:
         if table_spec.get('invalid_format_action','fail').lower() != "ignore":
             raise ife
         else:
@@ -65,7 +65,7 @@ def sample_file(table_spec, target_filename, sample_rate, max_records):
             current_row += 1
             if len(samples) >= max_records:
                 break
-    except tap_spreadsheets_anywhere.InvalidFormatError as ife:
+    except tap_spreadsheets_anywhere.format_handler.InvalidFormatError as ife:
         if table_spec.get('invalid_format_action','fail').lower() != "ignore":
             raise ife
         else:
