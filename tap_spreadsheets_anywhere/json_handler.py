@@ -1,6 +1,8 @@
 import csv
 import json
 import re
+from json import JSONDecodeError
+
 import singer
 
 LOGGER = singer.get_logger()
@@ -22,8 +24,21 @@ def generator_wrapper(root_iterator):
 
 
 def get_row_iterator(table_spec, reader):
-    json_obj = json.load(reader)
-    # throw a TypeError if the root json object can not be iterated
-    return generator_wrapper(iter(json_obj))
+    try:
+        json_array = json.load(reader)
+        # throw a TypeError if the root json object can not be iterated
+        return generator_wrapper(iter(json_array))
+    except JSONDecodeError as jde:
+        if jde.msg.startswith("Extra data"):
+            reader.seek(0)
+            json_objects = []
+            for jobj in reader:
+                json_objects.append(json.loads(jobj))
+            print(json_objects)
+            return generator_wrapper(json_objects)
+        else:
+            raise jde
+
+
 
 
