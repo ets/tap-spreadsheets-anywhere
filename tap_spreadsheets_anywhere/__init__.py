@@ -117,7 +117,7 @@ def sync(config, state, catalog):
 
             LOGGER.info(f'Wrote {records_streamed} records for table "{stream.tap_stream_id}".')
         else:
-            LOGGER.info(f'Skipping processing for stream [${stream.tap_stream_id}] without a catalog entry.')
+            LOGGER.warn(f'Skipping processing for stream [{stream.tap_stream_id}] without a config block.')
     return
 
 REQUIRED_CONFIG_KEYS = 'tables'

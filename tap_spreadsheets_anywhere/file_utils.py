@@ -251,13 +251,16 @@ def config_by_crawl(crawl_config):
     config = {'tables': []}
     for source in crawl_config:
         entries = {}
-        modified_since = dateutil.parser.parse(source['modified_since'] if 'modified_since' in source else
+        modified_since = dateutil.parser.parse(source['start_date'] if 'start_date' in source else
                                                "1970-01-01T00:00:00Z")
         target_files = get_matching_objects(source, modified_since=modified_since)
         for file in target_files:
             if not file['key'].endswith('/'):
                 dirs = file['key'].split('/')
-                table = re.sub(r'\W+', '', "_".join(dirs[0:-1]))
+                if len(dirs) > 1:
+                    table = re.sub(r'\W+', '', "_".join(dirs[0:-1]))
+                else:
+                    table = re.sub(r'\W+', '', dirs[0])
                 directory = "/".join(dirs[0:-1])
                 parts = file['key'].split('.')
                 # group all files in the same directory and with the same extension
