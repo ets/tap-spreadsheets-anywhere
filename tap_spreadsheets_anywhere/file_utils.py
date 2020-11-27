@@ -1,6 +1,8 @@
 import re
 import uuid
 from datetime import datetime, timezone
+
+import dateutil
 import requests
 import singer
 import boto3
@@ -249,7 +251,8 @@ def config_by_crawl(crawl_config):
     config = {'tables': []}
     for source in crawl_config:
         entries = {}
-        modified_since = source['modified_since'] if 'modified_since' in source else "1970-01-01T00:00:00Z"
+        modified_since = source['modified_since'] \
+            if 'modified_since' in source else dateutil.parser.parse("1970-01-01T00:00:00Z")
         target_files = get_matching_objects(source, modified_since=modified_since)
         for file in target_files:
             if not file['key'].endswith('/'):
