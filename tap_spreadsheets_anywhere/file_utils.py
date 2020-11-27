@@ -276,7 +276,7 @@ def config_by_crawl(crawl_config):
                         "format": "detect",
                         "invalid_format_action": "ignore",
                         "delimiter": "detect",
-                        "start_date": modified_since
+                        "start_date": modified_since.isoformat()
                     }
                 elif abs_pattern != entries[table]["pattern"]:
                     # We've identified an additional pattern under the same table so give it a unique table name
@@ -291,7 +291,7 @@ def config_by_crawl(crawl_config):
                             "format": "detect",
                             "invalid_format_action": "ignore",
                             "delimiter": "detect",
-                            "start_date": modified_since
+                            "start_date": modified_since.isoformat()
                         }
 
             else:
