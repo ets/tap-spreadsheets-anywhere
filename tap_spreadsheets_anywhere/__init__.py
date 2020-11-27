@@ -98,23 +98,26 @@ def sync(config, state, catalog):
         LOGGER.info("Syncing stream:" + stream.tap_stream_id)
         catalog_schema = stream.schema.to_dict()
         table_spec = next((x for x in config['tables'] if x['name'] == stream.tap_stream_id), None)
-        # Allow updates to our tables specification to override any previously extracted schema in the catalog
-        merged_schema = override_schema_with_config(catalog_schema, table_spec)
-        singer.write_schema(
-            stream_name=stream.tap_stream_id,
-            schema=merged_schema,
-            key_properties=stream.key_properties,
-        )
-        modified_since = dateutil.parser.parse(
-            state.get(stream.tap_stream_id, {}).get('modified_since') or table_spec['start_date'])
-        target_files = file_utils.get_matching_objects(table_spec, modified_since)
-        records_streamed = 0
-        for t_file in target_files:
-            records_streamed += file_utils.write_file(t_file['key'], table_spec, merged_schema)
-            state[stream.tap_stream_id] = {'modified_since': t_file['last_modified'].isoformat()}
-            singer.write_state(state)
+        if table_spec is not None:
+            # Allow updates to our tables specification to override any previously extracted schema in the catalog
+            merged_schema = override_schema_with_config(catalog_schema, table_spec)
+            singer.write_schema(
+                stream_name=stream.tap_stream_id,
+                schema=merged_schema,
+                key_properties=stream.key_properties,
+            )
+            modified_since = dateutil.parser.parse(
+                state.get(stream.tap_stream_id, {}).get('modified_since') or table_spec['start_date'])
+            target_files = file_utils.get_matching_objects(table_spec, modified_since)
+            records_streamed = 0
+            for t_file in target_files:
+                records_streamed += file_utils.write_file(t_file['key'], table_spec, merged_schema)
+                state[stream.tap_stream_id] = {'modified_since': t_file['last_modified'].isoformat()}
+                singer.write_state(state)
 
-        LOGGER.info(f'Wrote {records_streamed} records for table "{stream.tap_stream_id}".')
+            LOGGER.info(f'Wrote {records_streamed} records for table "{stream.tap_stream_id}".')
+        else:
+            LOGGER.info(f'Skipping processing for stream [${stream.tap_stream_id}] without a catalog entry.')
     return
 
 REQUIRED_CONFIG_KEYS = 'tables'
