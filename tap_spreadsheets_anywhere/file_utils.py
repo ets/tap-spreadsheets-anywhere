@@ -249,8 +249,8 @@ def config_by_crawl(crawl_config):
     config = {'tables': []}
     for source in crawl_config:
         entries = {}
-        target_files = get_matching_objects(source, modified_since=source[
-            'modified_since'] if 'modified_since' in source else None)
+        modified_since = source['modified_since'] if 'modified_since' in source else "1970-01-01T00:00:00Z"
+        target_files = get_matching_objects(source, modified_since=modified_since)
         for file in target_files:
             if not file['key'].endswith('/'):
                 dirs = file['key'].split('/')
@@ -273,7 +273,7 @@ def config_by_crawl(crawl_config):
                         "format": "detect",
                         "invalid_format_action": "ignore",
                         "delimiter": "detect",
-                        "start_date": "1970-01-01T00:00:00Z"
+                        "start_date": modified_since
                     }
                 elif abs_pattern != entries[table]["pattern"]:
                     # We've identified an additional pattern under the same table so give it a unique table name
@@ -288,7 +288,7 @@ def config_by_crawl(crawl_config):
                             "format": "detect",
                             "invalid_format_action": "ignore",
                             "delimiter": "detect",
-                            "start_date": "1970-01-01T00:00:00Z"
+                            "start_date": modified_since
                         }
 
             else:
