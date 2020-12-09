@@ -109,13 +109,17 @@ def sync(config, state, catalog):
             modified_since = dateutil.parser.parse(
                 state.get(stream.tap_stream_id, {}).get('modified_since') or table_spec['start_date'])
             target_files = file_utils.get_matching_objects(table_spec, modified_since)
+            max_records_per_run = table_spec.get('max_records_per_run', -1)
             records_streamed = 0
             for t_file in target_files:
                 records_streamed += file_utils.write_file(t_file['key'], table_spec, merged_schema)
+                if max_records_per_run > 0 and max_records_per_run <= records_streamed:
+                    LOGGER.info(f'Processed the per-run limit of {records_streamed} records for stream "{stream.tap_stream_id}". Stopping sync for this stream.')
+                    break
                 state[stream.tap_stream_id] = {'modified_since': t_file['last_modified'].isoformat()}
                 singer.write_state(state)
 
-            LOGGER.info(f'Wrote {records_streamed} records for table "{stream.tap_stream_id}".')
+            LOGGER.info(f'Wrote {records_streamed} records for stream "{stream.tap_stream_id}".')
         else:
             LOGGER.warn(f'Skipping processing for stream [{stream.tap_stream_id}] without a config block.')
     return
@@ -128,7 +132,7 @@ def main():
     args = utils.parse_args([REQUIRED_CONFIG_KEYS])
     crawl_paths = [x for x in args.config['tables'] if "crawl_config" in x and x["crawl_config"]]
     if len(crawl_paths) > 0: # Our config includes at least one crawl block
-        LOGGER.info("Executing experimental 'crawl' mode to auto-generate a table per bucket.")
+        LOGGER.info("Executing experimental 'crawl' mode to auto-generate a table config per bucket.")
         tables_config = file_utils.config_by_crawl(crawl_paths)
         # Add back in the non-crawl blocks
         tables_config['tables'] += [x for x in args.config['tables'] if "crawl_config" not in x or not x["crawl_config"]]

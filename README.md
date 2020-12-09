@@ -91,7 +91,7 @@ The configuration is also captured in [tables_config_util.py](tap_spreadsheets_a
 ```
 Each object in the 'tables' array describes one or more CSV or Excel spreadsheet files that adhere to the same schema and are meant to be tapped as the source for a Singer-based data flow.  
 - **path**: A string describing the transport and bucket/root directory holding the targeted source files.
-- **name**: A string describing the "table" into which the source data should be loaded.
+- **name**: A string describing the "table" (aka Singer stream) into which the source data should be loaded.
 - **search_prefix**: (optional) This is an optional prefix to apply after the bucket that will be used to filter files in the listing request from the targeted system. This prefix potentially reduces the number of files returned from the listing request.
 - **pattern**: This is an escaped regular expression that the tap will use to filter the listing result set returned from the listing request. This pattern potentially reduces the number of listed files that are considered as sources for the declared table. It's a bit strange, since this is an escaped string inside of an escaped string, any backslashes in the RegEx will need to be double-escaped.
 - **start_date**: This is the datetime that the tap will use to filter files, based on the modified timestamp of the file.
@@ -104,8 +104,8 @@ Each object in the 'tables' array describes one or more CSV or Excel spreadsheet
 - **sample_rate**: (optional) The sampling rate to apply when reading a source file for sampling in discovery mode. A sampling rate of 1 will sample every line.  A sampling rate of 10 (the default) will sample every 10th line.
 - **max_sampling_read**: (optional) How many lines of the source file should be sampled when in discovery mode attempting to infer a schema. The default is 1000 samples.
 - **max_sampled_files**: (optional) The maximum number of files in the targeted set that will be sampled. The default is 5.
+- **max_records_per_run**: (optional) The maximum number of records that should be written to this stream in a single sync run. The default is unlimited. 
 - **prefer_number_vs_integer**: (optional) If the discovery mode sampling process sees only integer values for a field, should `number` be used anyway so that floats are not considered errors? The default is false but true can help in situations where floats only appear rarely in sources and may not be detected through discovery sampling.
-ies to your files.
 - **selected**: (optional) Should this table be synced. Defaults to true. Setting to false will skip this table on a sync run.
 - **worksheet_name**: (optional) the worksheet name to pull from in the targeted xls file(s). Only required when format is excel
 - **delimiter**: (optional) the delimiter to use when format is 'csv'. Defaults to a comma ',' but you can set delimiter to 'detect' to leverage the csv "Sniffer" for auto-detecting delimiter. 
