@@ -279,6 +279,11 @@ def config_by_crawl(crawl_config):
                         "format": "detect",
                         "invalid_format_action": "ignore",
                         "delimiter": "detect",
+                        "max_records_per_run": source.get('max_records_per_run',-1),
+                        "max_sampled_files": source.get('max_sampled_files', 5),
+                        "max_sampling_read": source.get('max_sampling_read', 1000),
+                        "universal_newlines": source.get('universal_newlines', True),
+                        "prefer_number_vs_integer": source.get('prefer_number_vs_integer', False),
                         "start_date": modified_since.isoformat()
                     }
                 elif abs_pattern != entries[table]["pattern"]:
@@ -294,6 +299,11 @@ def config_by_crawl(crawl_config):
                             "format": "detect",
                             "invalid_format_action": "ignore",
                             "delimiter": "detect",
+                            "max_records_per_run": source.get('max_records_per_run', -1),
+                            "max_sampled_files": source.get('max_sampled_files', 5),
+                            "max_sampling_read": source.get('max_sampling_read', 1000),
+                            "universal_newlines": source.get('universal_newlines', True),
+                            "prefer_number_vs_integer": source.get('prefer_number_vs_integer', False),
                             "start_date": modified_since.isoformat()
                         }
 
