@@ -17,7 +17,7 @@ from dateutil.parser import parse as parsedate
 LOGGER = singer.get_logger()
 
 
-def write_file(target_filename, table_spec, schema):
+def write_file(target_filename, table_spec, schema, max_records=-1):
     LOGGER.info('Syncing file "{}".'.format(target_filename))
     target_uri = table_spec['path'] + '/' + target_filename
     records_synced = 0
@@ -41,6 +41,9 @@ def write_file(target_filename, table_spec, schema):
                 raise bpe
 
             records_synced += 1
+            if 0 < max_records <= records_synced:
+                break
+
     except tap_spreadsheets_anywhere.format_handler.InvalidFormatError as ife:
         if table_spec.get('invalid_format_action','fail').lower() == "ignore":
             LOGGER.exception(f"Ignoring unparseable file: {target_filename}",ife)
