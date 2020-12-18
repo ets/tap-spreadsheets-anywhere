@@ -1,11 +1,9 @@
-import csv
 import json
 import re
 from json import JSONDecodeError
+import logging
 
-import singer
-
-LOGGER = singer.get_logger()
+LOGGER = logging.getLogger(__name__)
 
 def generator_wrapper(root_iterator):
     for obj in root_iterator:
@@ -34,7 +32,6 @@ def get_row_iterator(table_spec, reader):
             json_objects = []
             for jobj in reader:
                 json_objects.append(json.loads(jobj))
-            print(json_objects)
             return generator_wrapper(json_objects)
         else:
             raise jde

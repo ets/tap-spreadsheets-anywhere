@@ -1,8 +1,8 @@
 import dateutil
 import pytz
-import singer
+import logging
 
-LOGGER = singer.get_logger()
+LOGGER = logging.getLogger(__name__)
 
 
 def convert_row(row, schema):

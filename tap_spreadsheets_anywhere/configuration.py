@@ -1,10 +1,9 @@
 '''Provides an object model for a our config file'''
 import json
-import singer
-import sys
+import logging
 
 from voluptuous import Schema, Required, Any, Optional
-LOGGER = singer.get_logger()
+LOGGER = logging.getLogger(__name__)
 
 CONFIG_CONTRACT = Schema({
     Required('tables'): [{

@@ -1,5 +1,5 @@
 import re
-import uuid
+import pytz
 from datetime import datetime, timezone
 
 import dateutil
@@ -7,14 +7,14 @@ import requests
 import singer
 import boto3
 from google.cloud import storage
-import os
+import os, logging
 from os import walk
 import tap_spreadsheets_anywhere.format_handler
 import tap_spreadsheets_anywhere.conversion as conversion
 import smart_open.ssh as ssh_transport
 from dateutil.parser import parse as parsedate
 
-LOGGER = singer.get_logger()
+LOGGER = logging.getLogger(__name__)
 
 
 def write_file(target_filename, table_spec, schema, max_records=-1):
@@ -174,13 +174,15 @@ def convert_URL_to_file_list(table_spec):
     LOGGER.info(f"Assembled {url} as the URL to a source file.")
     r = requests.head(url)
     if r:
-        url_time = r.headers['last-modified']
-        url_date = parsedate(url_time)
+        if 'last-modified' in r.headers:
+            last_modified = pytz.UTC.localize(datetime.strptime(r.headers['last-modified'], '%a, %d %b %Y %H:%M:%S %Z'))
+        else:
+            LOGGER.warning("URL did not return a last-modified header so using current date and time.")
+            last_modified = datetime.now(tz=timezone.utc)
+
+        return [{'Key': table_spec["pattern"], 'LastModified':last_modified}]
     else:
         raise ValueError(f"Configured URL {url} could not be read.")
-
-    return [{'Key': table_spec["pattern"], 'LastModified': url_date}]
-
 
 
 def list_files_in_local_bucket(bucket, search_prefix=None):

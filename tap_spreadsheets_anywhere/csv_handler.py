@@ -1,8 +1,8 @@
 import csv
 import re
-import singer
+import logging
 
-LOGGER = singer.get_logger()
+LOGGER = logging.getLogger(__name__)
 
 def generator_wrapper(reader):
     for row in reader:

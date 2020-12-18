@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import os
-import re
+import logging
 
 import dateutil
 import singer
@@ -12,8 +12,7 @@ from tap_spreadsheets_anywhere.configuration import Config
 import tap_spreadsheets_anywhere.conversion as conversion
 import tap_spreadsheets_anywhere.file_utils as file_utils
 
-LOGGER = singer.get_logger()
-
+LOGGER = logging.getLogger(__name__)
 
 def get_abs_path(path):
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), path)

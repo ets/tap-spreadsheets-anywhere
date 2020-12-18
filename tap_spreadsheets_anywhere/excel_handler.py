@@ -1,8 +1,8 @@
 import re
 import xlrd
-import singer
+import logging
 
-LOGGER = singer.get_logger()
+LOGGER = logging.getLogger(__name__)
 
 def generator_wrapper(reader):
     header_row = None
