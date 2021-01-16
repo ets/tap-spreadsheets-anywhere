@@ -123,7 +123,7 @@ def pick_datatype(counts,prefer_number_vs_integer=False):
           counts.get('number', 0) > 0):
         to_return = 'number'
     else:
-        LOGGER.warning(f"Unclear combination of data type detected: {counts}. Defaulting type to String.")
+        LOGGER.debug(f"Ambiguous combination of data type detected: {counts}. Defaulting type to String.")
 
     return to_return
 
