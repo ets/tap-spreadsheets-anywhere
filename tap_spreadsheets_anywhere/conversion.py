@@ -113,11 +113,17 @@ def pick_datatype(counts,prefer_number_vs_integer=False):
             to_return = 'number' if prefer_number_vs_integer else 'integer'
         elif counts.get('number', 0) > 0:
             to_return = 'number'
+        elif counts.get('date-time', 0) > 0:
+            to_return = 'date-time'
+        elif counts.get('string', 0) <= 0:
+            LOGGER.warning(f"Unexpected data type encountered in histogram {counts}. Defaulting type to String.")
 
     elif (len(counts) == 2 and
           counts.get('integer', 0) > 0 and
           counts.get('number', 0) > 0):
         to_return = 'number'
+    else:
+        LOGGER.warning(f"Unclear combination of data type detected: {counts}. Defaulting type to String.")
 
     return to_return
 
