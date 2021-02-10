@@ -214,9 +214,11 @@ def list_files_in_gs_bucket(bucket, search_prefix=None):
         
     blobs = gs_client.list_blobs(bucket, prefix=search_prefix)
 
-    LOGGER.info("Found {} files.".format(len(blobs)))
+    target_objects = [{'Key': blob.name, 'LastModified': blob.updated} for blob in blobs]
+    
+    LOGGER.info("Found {} files.".format(len(target_objects)))
 
-    return [{'Key': blob.name, 'LastModified': blob.updated} for blob in blobs]
+    return target_objects
 
 
 def list_files_in_s3_bucket(bucket, search_prefix=None):
