@@ -1,16 +1,18 @@
 import dateutil
 import pytz
 import logging
+from copy import deepcopy
 
 LOGGER = logging.getLogger(__name__)
 
 
 def convert_row(row, schema):
+    t_schema = deepcopy(schema)
     to_return = {}
     for key, value in row.items():
-        if key in schema['properties']:
-            field_schema = schema['properties'][key]
-            declared_types = field_schema.get('type', 'string')
+        if key in t_schema['properties']:
+            field_schema = t_schema['properties'][key]
+            declared_types = field_schema.get('type', ['null', 'string'])
         else:
             declared_types = ['string','null']
 
