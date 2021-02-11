@@ -46,9 +46,9 @@ def discover(config):
         try:
             modified_since = dateutil.parser.parse(table_spec['start_date'])
             target_files = file_utils.get_matching_objects(table_spec, modified_since)
-            sample_rate = table_spec.get('sample_rate',10)
+            sample_rate = table_spec.get('sample_rate',5)
             max_sampling_read = table_spec.get('max_sampling_read', 1000)
-            max_sampled_files = table_spec.get('max_sampled_files', 5)
+            max_sampled_files = table_spec.get('max_sampled_files', 50)
             prefer_number_vs_integer = table_spec.get('prefer_number_vs_integer', False)
             samples = file_utils.sample_files(table_spec, target_files,sample_rate=sample_rate,
                                               max_records=max_sampling_read, max_files=max_sampled_files)
