@@ -26,11 +26,11 @@ def coerce(datum,declared_types):
     if datum is None or datum == '':
         return None
 
-    desired_type = declared_types
-    if isinstance(declared_types, list):
-        if "null" in declared_types:
-            declared_types.remove("null")
-        desired_type = declared_types[0]
+    desired_type = declared_types.copy()
+    if isinstance(desired_type, list):
+        if "null" in desired_type:
+            desired_type.remove("null")
+        desired_type = desired_type[0]
 
     coerced, _ = convert(datum, desired_type)
     return coerced
