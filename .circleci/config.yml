@@ -1,0 +1,23 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@0.2.1
+
+jobs:
+  build-and-test:
+    executor: python/default
+    steps:
+      - checkout      
+      - run:
+          command: |
+            sudo python setup.py install
+            sudo pip install pytest
+          name: Install Dependencies      
+      - run:
+          command: pytest -s
+          name: Test
+
+workflows:
+  main:
+    jobs:
+      - build-and-test
