@@ -1,16 +1,18 @@
 import dateutil
 import pytz
 import logging
+from copy import deepcopy
 
 LOGGER = logging.getLogger(__name__)
 
 
 def convert_row(row, schema):
+    t_schema = deepcopy(schema)
     to_return = {}
     for key, value in row.items():
-        if key in schema['properties']:
-            field_schema = schema['properties'][key]
-            declared_types = field_schema.get('type', 'string')
+        if key in t_schema['properties']:
+            field_schema = t_schema['properties'][key]
+            declared_types = field_schema.get('type', ['null', 'string'])
         else:
             declared_types = ['string','null']
 
@@ -24,11 +26,11 @@ def coerce(datum,declared_types):
     if datum is None or datum == '':
         return None
 
-    desired_type = declared_types
-    if isinstance(declared_types, list):
-        if "null" in declared_types:
-            declared_types.remove("null")
-        desired_type = declared_types[0]
+    desired_type = declared_types.copy()
+    if isinstance(desired_type, list):
+        if "null" in desired_type:
+            desired_type.remove("null")
+        desired_type = desired_type[0]
 
     coerced, _ = convert(datum, desired_type)
     return coerced
@@ -38,7 +40,7 @@ def convert(datum, desired_type=None):
     """
     Returns tuple of (converted_data_point, json_schema_type,).
     """
-    if datum is None or datum == '':
+    if datum is None or datum.strip() == '':
         return None, None,
 
     if desired_type in (None, 'integer'):
