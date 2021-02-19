@@ -1,5 +1,5 @@
 import re
-import xlrd
+import openpyxl
 import logging
 
 LOGGER = logging.getLogger(__name__)
@@ -29,26 +29,26 @@ def generator_wrapper(reader):
 
 
 def get_row_iterator(table_spec, file_handle):
-    workbook = xlrd.open_workbook(on_demand=True,file_contents=file_handle.read())
+    workbook = openpyxl.load_workbook(file_handle, read_only=True)
+    
     if "worksheet_name" in table_spec:
-        sheet = workbook.sheet_by_name(table_spec["worksheet_name"])
+        active_sheet = workbook[table_spec["worksheet_name"]]
     else:
         try:
-            sheet_name_list = workbook.sheet_names()
+            worksheets = workbook.worksheets
             #if one sheet
-            if(workbook.nsheets == 1):
-                sheet = workbook.sheet_by_name(sheet_name_list[0])
+            if(len(worksheets) == 1):
+                active_sheet = worksheets[0]
             #else picks sheet with most data found determined by number of rows
             else:
-                sheet_list = workbook.sheets()
                 max_row = 0
-                max_name = ""
-                for i in sheet_list:
-                    if i.nrows > max_row:
-                        max_row = i.nrows
-                        max_name = i.name
-                sheet = workbook.sheet_by_name(max_name)
+                longest_sheet_index = 0
+                for i, sheet in enumerate(sheet_list):
+                    if sheet.max_row > max_row:
+                        max_row = i.max_row
+                        longest_sheet_index = i
+                active_sheet = worksheets[longest_sheet_index]
         except Exception as e:
             LOGGER.info(e)
-            sheet = workbook.sheet_by_name(sheet_name_list[0])
-    return generator_wrapper(sheet.get_rows())
+            active_sheet = worksheets[0]
+    return generator_wrapper(active_sheet)
