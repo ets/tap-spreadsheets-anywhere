@@ -7,14 +7,12 @@ jobs:
   build-and-test:
     executor: python/default
     steps:
-      - checkout
-      - python/load-cache
+      - checkout      
       - run:
           command: |
             python setup.py install
             pip install pytest
-          name: Install Dependencies
-      - python/save-cache
+          name: Install Dependencies      
       - run:
           command: pytest -s
           name: Test
