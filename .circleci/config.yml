@@ -9,11 +9,11 @@ jobs:
     steps:
       - checkout
       - python/load-cache
-      - python/install-deps
       - run:
           command: |
             python setup.py install
             pip install pytest
+          name: Install Dependencies
       - python/save-cache
       - run:
           command: pytest -s
