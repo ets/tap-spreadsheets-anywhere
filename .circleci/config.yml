@@ -10,8 +10,8 @@ jobs:
       - checkout      
       - run:
           command: |
-            python setup.py install
-            pip install pytest
+            sudo python setup.py install
+            sudo pip install pytest
           name: Install Dependencies      
       - run:
           command: pytest -s
