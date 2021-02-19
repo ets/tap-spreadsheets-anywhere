@@ -199,7 +199,7 @@ def list_files_in_local_bucket(bucket, search_prefix=None):
     for (dirpath, dirnames, filenames) in walk(path):
         for filename in filenames:
             abspath = os.path.join(dirpath,filename)
-            relpath = abspath[len(path)+1:]
+            relpath = os.path.split(abspath)[1]
             local_filenames.append(relpath)
         if len(local_filenames) > max_results:
             raise ValueError(f"Read more than {max_results} records from the path {path}. Use a more specific "
