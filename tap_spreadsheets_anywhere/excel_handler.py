@@ -16,6 +16,8 @@ def generator_wrapper(reader):
             header_cell = header_row[index]
 
             formatted_key = header_cell.value
+            if not formatted_key:
+                formatted_key = '' # default to empty string for key
 
             # remove non-word, non-whitespace characters
             formatted_key = re.sub(r"[^\w\s]", '', formatted_key)
