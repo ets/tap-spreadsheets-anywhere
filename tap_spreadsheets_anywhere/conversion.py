@@ -40,7 +40,7 @@ def convert(datum, desired_type=None):
     """
     Returns tuple of (converted_data_point, json_schema_type,).
     """
-    if datum is None or datum.strip() == '':
+    if datum is None or str(datum).strip() == '':
         return None, None,
 
     if desired_type in (None, 'integer'):

@@ -1,10 +1,12 @@
 import codecs
 import unittest
+from unittest.mock import patch
 
 import dateutil
 import smart_open
+from six import StringIO
 
-from tap_spreadsheets_anywhere import configuration, file_utils, csv_handler, json_handler
+from tap_spreadsheets_anywhere import configuration, file_utils, csv_handler, json_handler, generate_schema
 from tap_spreadsheets_anywhere.format_handler import monkey_patch_streamreader, get_row_iterator
 
 TEST_TABLE_SPEC = {
@@ -42,7 +44,7 @@ TEST_TABLE_SPEC = {
         {
             "path": "file://./tap_spreadsheets_anywhere/test",
             "name": "badnewlines",
-            "pattern": ".*\\.xlsx",
+            "pattern": ".*bad_newlines\\.xlsx",
             "start_date": "2017-05-01T00:00:00Z",
             "key_properties": [],
             "format": "excel",
@@ -81,6 +83,14 @@ TEST_TABLE_SPEC = {
             "key_properties": [],
             "format": "excel",
             "worksheet_name": " Worldwide",
+        },
+        {
+            "path": "file://./tap_spreadsheets_anywhere/test",
+            "name": "error-free",
+            "pattern": ".*no_errors\\.xlsx",
+            "start_date": "2017-05-01T00:00:00Z",
+            "key_properties": [],
+            "format": "excel"
         }
     ]
 }
@@ -125,6 +135,20 @@ class TestFormatHandler(unittest.TestCase):
 
         for row in iterator:
             self.assertTrue(row['id'].isnumeric(), "Parsed ID is not a number for: {}".format(row['id']))
+
+    def test_smart_columns(self):
+        with patch('sys.stdout', new=StringIO()) as fake_out:
+            records_streamed = 0
+            table_spec = TEST_TABLE_SPEC['tables'][7]
+            modified_since = dateutil.parser.parse(table_spec['start_date'])
+            target_files = file_utils.get_matching_objects(table_spec, modified_since)
+            samples = file_utils.sample_files(table_spec, target_files, sample_rate=1)
+            schema = generate_schema(table_spec, samples)
+            for t_file in target_files:
+                records_streamed += file_utils.write_file(t_file['key'], table_spec, schema.to_dict())
+
+            self.assertEqual(records_streamed, 6)
+
 
     def test_local_bucket(self):
         table_spec = TEST_TABLE_SPEC['tables'][1]

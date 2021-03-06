@@ -40,6 +40,22 @@ def override_schema_with_config(inferred_schema, table_spec):
     return merge_dicts(inferred_schema, override_schema)
 
 
+def generate_schema(table_spec, samples):
+    metadata_schema = {
+        '_smart_source_bucket': {'type': 'string'},
+        '_smart_source_file': {'type': 'string'},
+        '_smart_source_lineno': {'type': 'integer'},
+    }
+    prefer_number_vs_integer = table_spec.get('prefer_number_vs_integer', False)
+    data_schema = conversion.generate_schema(samples, prefer_number_vs_integer=prefer_number_vs_integer)
+    inferred_schema = {
+        'type': 'object',
+        'properties': merge_dicts(data_schema, metadata_schema)
+    }
+
+    merged_schema = override_schema_with_config(inferred_schema, table_spec)
+    return Schema.from_dict(merged_schema)
+
 def discover(config):
     streams = []
     for table_spec in config['tables']:
@@ -49,24 +65,9 @@ def discover(config):
             sample_rate = table_spec.get('sample_rate',5)
             max_sampling_read = table_spec.get('max_sampling_read', 1000)
             max_sampled_files = table_spec.get('max_sampled_files', 50)
-            prefer_number_vs_integer = table_spec.get('prefer_number_vs_integer', False)
             samples = file_utils.sample_files(table_spec, target_files,sample_rate=sample_rate,
                                               max_records=max_sampling_read, max_files=max_sampled_files)
-
-            metadata_schema = {
-                '_smart_source_bucket': {'type': 'string'},
-                '_smart_source_file': {'type': 'string'},
-                '_smart_source_lineno': {'type': 'integer'},
-            }
-            data_schema = conversion.generate_schema(samples,prefer_number_vs_integer=prefer_number_vs_integer)
-            inferred_schema = {
-                'type': 'object',
-                'properties': merge_dicts(data_schema, metadata_schema)
-            }
-
-            merged_schema = override_schema_with_config(inferred_schema, table_spec)
-            schema = Schema.from_dict(merged_schema)
-
+            schema = generate_schema(table_spec, samples)
             stream_metadata = []
             key_properties = table_spec.get('key_properties', [])
             streams.append(

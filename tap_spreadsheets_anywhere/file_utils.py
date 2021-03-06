@@ -52,7 +52,7 @@ def write_file(target_filename, table_spec, schema, max_records=-1):
             except BrokenPipeError as bpe:
                 LOGGER.error(
                     f'Pipe to loader broke after {records_synced} records were written from {target_filename}: troubled '
-                    f'line was {record}')
+                    f'line was {record_with_meta}')
                 raise bpe
 
             records_synced += 1
