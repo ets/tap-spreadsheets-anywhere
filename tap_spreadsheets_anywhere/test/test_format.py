@@ -148,6 +148,7 @@ class TestFormatHandler(unittest.TestCase):
                 records_streamed += file_utils.write_file(t_file['key'], table_spec, schema.to_dict())
 
             self.assertEqual(records_streamed, 6)
+            #TODO: verify that stdout received record data including smart columns
 
 
     def test_local_bucket(self):
