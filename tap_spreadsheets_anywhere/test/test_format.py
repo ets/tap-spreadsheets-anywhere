@@ -74,13 +74,13 @@ TEST_TABLE_SPEC = {
             "format": "csv"
         },
         {
-            "path": "https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/27763/ADYC1Q&name=10-F-1140.xls",
+            "path": "https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/27763",
             "name": "us__military_deaths",
-            "pattern": '.*',
+            "pattern": 'ADYC1Q&name=10-F-1140.xls',
             "start_date": '2014-11-04T18:38:22Z',
             "key_properties": [],
             "format": "excel",
-            "worksheet_name": "Worldwide",
+            "worksheet_name": " Worldwide",
         }
     ]
 }
@@ -154,7 +154,7 @@ class TestFormatHandler(unittest.TestCase):
         iterator = get_row_iterator(TEST_TABLE_SPEC['tables'][5], target_uri)
 
         row = next(iterator)
-        self.assertTrue(int(row['id']) > 0,row['id']+" was not positive")
+        self.assertTrue( row['1976'] == '1976', "Row did not contain expected data")
 
     def test_renamed_https_object(self):
         table_spec = TEST_TABLE_SPEC['tables'][6]
@@ -162,8 +162,8 @@ class TestFormatHandler(unittest.TestCase):
         target_files = file_utils.get_matching_objects(table_spec, modified_since)
         assert len(target_files) == 1
 
-        target_uri = table_spec['path']
+        target_uri = table_spec['path'] + '/' + table_spec['pattern']
         iterator = get_row_iterator(TEST_TABLE_SPEC['tables'][6], target_uri)
 
         row = next(iterator)
-        self.assertTrue(int(row['id']) > 0,row['id']+" was not positive")
+        self.assertTrue(len(row)>1,"Not able to read a row.")
