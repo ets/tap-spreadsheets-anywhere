@@ -2,6 +2,8 @@ import re
 import openpyxl
 import logging
 
+import xlrd
+
 LOGGER = logging.getLogger(__name__)
 
 def generator_wrapper(reader):
@@ -29,6 +31,31 @@ def generator_wrapper(reader):
 
         yield to_return
 
+def get_legacy_row_iterator(table_spec, file_handle):
+    workbook = xlrd.open_workbook(on_demand=True,file_contents=file_handle.read())
+    if "worksheet_name" in table_spec:
+        sheet = workbook.sheet_by_name(table_spec["worksheet_name"])
+    else:
+        try:
+            sheet_name_list = workbook.sheet_names()
+            #if one sheet
+            if(workbook.nsheets == 1):
+                sheet = workbook.sheet_by_name(sheet_name_list[0])
+            #else picks sheet with most data found determined by number of rows
+            else:
+                sheet_list = workbook.sheets()
+                max_row = 0
+                max_name = ""
+                for i in sheet_list:
+                    if i.nrows > max_row:
+                        max_row = i.nrows
+                        max_name = i.name
+                sheet = workbook.sheet_by_name(max_name)
+        except Exception as e:
+            LOGGER.info(e)
+            sheet = workbook.sheet_by_name(sheet_name_list[0])
+    return generator_wrapper(sheet.get_rows())
+
 
 def get_row_iterator(table_spec, file_handle):
     workbook = openpyxl.load_workbook(file_handle, read_only=True)
@@ -45,7 +72,7 @@ def get_row_iterator(table_spec, file_handle):
             else:
                 max_row = 0
                 longest_sheet_index = 0
-                for i, sheet in enumerate(sheet_list):
+                for i, sheet in enumerate(worksheets):
                     if sheet.max_row > max_row:
                         max_row = i.max_row
                         longest_sheet_index = i

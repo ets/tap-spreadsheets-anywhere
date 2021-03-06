@@ -66,12 +66,21 @@ TEST_TABLE_SPEC = {
             "field_names": ["id","name","a" ,"country","b" ,"c" ,"d" ,"e" ,"f" ,"g" ,"h" ,"i"]
         },
         {
-            "path": "https://dataverse.harvard.edu/api/access/datafile/",
+            "path": "https://dataverse.harvard.edu/api/access/datafile",
             "name": "dataverse",
             "pattern": "4202836",
             "start_date": "1970-05-01T00:00:00Z",
             "key_properties": [],
             "format": "csv"
+        },
+        {
+            "path": "https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/27763/ADYC1Q&name=10-F-1140.xls",
+            "name": "us__military_deaths",
+            "pattern": '.*',
+            "start_date": '2014-11-04T18:38:22Z',
+            "key_properties": [],
+            "format": "excel",
+            "worksheet_name": "Worldwide",
         }
     ]
 }
@@ -129,7 +138,7 @@ class TestFormatHandler(unittest.TestCase):
         target_files = file_utils.get_matching_objects(table_spec, modified_since)
         assert len(target_files) == 1
 
-        target_uri = table_spec['path'] + '/' + target_files[0]["key"]
+        target_uri = table_spec['path'] + '/' + table_spec['pattern']
         iterator = get_row_iterator(TEST_TABLE_SPEC['tables'][4], target_uri)
 
         row = next(iterator)
@@ -141,8 +150,20 @@ class TestFormatHandler(unittest.TestCase):
         target_files = file_utils.get_matching_objects(table_spec, modified_since)
         assert len(target_files) == 1
 
-        target_uri = table_spec['path'] + '/' + target_files[0]["key"]
-        iterator = get_row_iterator(TEST_TABLE_SPEC['tables'][4], target_uri)
+        target_uri = table_spec['path'] + '/' + table_spec['pattern']
+        iterator = get_row_iterator(TEST_TABLE_SPEC['tables'][5], target_uri)
+
+        row = next(iterator)
+        self.assertTrue(int(row['id']) > 0,row['id']+" was not positive")
+
+    def test_renamed_https_object(self):
+        table_spec = TEST_TABLE_SPEC['tables'][6]
+        modified_since = dateutil.parser.parse(table_spec['start_date'])
+        target_files = file_utils.get_matching_objects(table_spec, modified_since)
+        assert len(target_files) == 1
+
+        target_uri = table_spec['path']
+        iterator = get_row_iterator(TEST_TABLE_SPEC['tables'][6], target_uri)
 
         row = next(iterator)
         self.assertTrue(int(row['id']) > 0,row['id']+" was not positive")

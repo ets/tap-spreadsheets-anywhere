@@ -1,4 +1,7 @@
+import cgi
 import re
+from urllib.parse import unquote
+
 import pytz
 from datetime import datetime, timezone
 
@@ -18,9 +21,20 @@ from dateutil.parser import parse as parsedate
 LOGGER = logging.getLogger(__name__)
 
 
+def resolve_target_uri(table_spec, target_filename):
+    protocol, bucket = parse_path(table_spec['path'])
+    # TODO: logic below is disabled because we can't currently support reading filenames from Content-Disposition (Excel limitations)
+    if False and protocol in ["http", "https"] and table_spec['pattern'] != target_filename:
+        # Handle case where URL returns a filename in the response so we do NOT append the pattern to get the URI
+        return table_spec['path']
+    else:
+        return table_spec['path'] + "/" + target_filename
+
+
+
 def write_file(target_filename, table_spec, schema, max_records=-1):
     LOGGER.info('Syncing file "{}".'.format(target_filename))
-    target_uri = table_spec['path'] + '/' + target_filename
+    target_uri = resolve_target_uri(table_spec, target_filename)
     records_synced = 0
     try:
         with Transformer() as transformer:
@@ -60,7 +74,7 @@ def sample_file(table_spec, target_filename, sample_rate, max_records):
     LOGGER.info('Sampling {} ({} records, every {}th record).'
                 .format(target_filename, max_records, sample_rate))
 
-    target_uri = table_spec['path'] + '/' + target_filename
+    target_uri = resolve_target_uri(table_spec,target_filename)
     samples = []
     current_row = 0
     try:
@@ -123,7 +137,10 @@ def get_matching_objects(table_spec, modified_since=None):
 
     pattern = table_spec['pattern']
     matcher = re.compile(pattern)
-    LOGGER.debug(f'Checking bucket "{bucket}" for keys matching "{pattern}"')
+    if modified_since:
+        LOGGER.info(f'Checking {len(target_objects)} resolved objects for any that match regular expression "{pattern}" and were modified since {modified_since}')
+    else:
+        LOGGER.info(f'Checking {len(target_objects)} resolved objects for any that match regular expression "{pattern}"')
 
     to_return = []
     for obj in target_objects:
@@ -138,6 +155,8 @@ def get_matching_objects(table_spec, modified_since=None):
         else:
             LOGGER.debug('Not including key "{}"'.format(key))
 
+    if not LOGGER.isEnabledFor(logging.DEBUG):
+        LOGGER.info(f'Processing {len(to_return)} resolved objects that met our criteria. Enable debug verbosity logging for more details.')
     return sorted(to_return, key=lambda item: item['last_modified'])
 
 
@@ -175,7 +194,7 @@ def list_files_in_SSH_bucket(uri, search_prefix=None):
 def convert_URL_to_file_list(table_spec):
     url = table_spec["path"] + "/" + table_spec["pattern"]
     LOGGER.info(f"Assembled {url} as the URL to a source file.")
-    r = requests.head(url)
+    r = requests.get(url, allow_redirects=True)
     if r:
         if 'last-modified' in r.headers:
             last_modified = pytz.UTC.localize(datetime.strptime(r.headers['last-modified'], '%a, %d %b %Y %H:%M:%S %Z'))
@@ -183,7 +202,16 @@ def convert_URL_to_file_list(table_spec):
             LOGGER.warning("URL did not return a last-modified header so using current date and time.")
             last_modified = datetime.now(tz=timezone.utc)
 
-        return [{'Key': table_spec["pattern"], 'LastModified':last_modified}]
+        filename = table_spec["pattern"]
+        # TODO: logic below is disabled because we can't currently support reading filenames from Content-Disposition (Excel limitations)
+        # if 'content-disposition' in r.headers:
+        #     cd = r.headers['content-disposition']
+        #     filename = unquote(re.findall("filename.?=(.+)", cd)[0])
+        #     LOGGER.info("URL returned '" + filename + "' as the targeted filename.")
+        # else:
+        #     LOGGER.warning("URL did not return a content-disposition header so using pattern '"+table_spec["pattern"]+"' as the targeted filename.")
+
+        return [{'Key': filename, 'LastModified':last_modified}]
     else:
         raise ValueError(f"Configured URL {url} could not be read.")
 
