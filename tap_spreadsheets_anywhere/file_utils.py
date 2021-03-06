@@ -37,29 +37,27 @@ def write_file(target_filename, table_spec, schema, max_records=-1):
     target_uri = resolve_target_uri(table_spec, target_filename)
     records_synced = 0
     try:
-        with Transformer() as transformer:
-            iterator = tap_spreadsheets_anywhere.format_handler.get_row_iterator(table_spec, target_uri)
-            for row in iterator:
-                metadata = {
-                    '_smart_source_bucket': table_spec['path'],
-                    '_smart_source_file': target_filename,
-                    # index zero, +1 for header row
-                    '_smart_source_lineno': records_synced + 2
-                }
+        iterator = tap_spreadsheets_anywhere.format_handler.get_row_iterator(table_spec, target_uri)
+        for row in iterator:
+            metadata = {
+                '_smart_source_bucket': table_spec['path'],
+                '_smart_source_file': target_filename,
+                # index zero, +1 for header row
+                '_smart_source_lineno': records_synced + 2
+            }
 
-                try:
-                    record = conversion.convert_row(row, schema)
-                    transformed_record = transformer.transform(record, schema, metadata)
-                    singer.write_record(table_spec['name'], transformed_record)
-                except BrokenPipeError as bpe:
-                    LOGGER.error(
-                        f'Pipe to loader broke after {records_synced} records were written from {target_filename}: troubled '
-                        f'line was {record}')
-                    raise bpe
+            try:
+                record_with_meta = [{**conversion.convert_row(row, schema), **metadata}]
+                singer.write_record(table_spec['name'], record_with_meta)
+            except BrokenPipeError as bpe:
+                LOGGER.error(
+                    f'Pipe to loader broke after {records_synced} records were written from {target_filename}: troubled '
+                    f'line was {record}')
+                raise bpe
 
-                records_synced += 1
-                if 0 < max_records <= records_synced:
-                    break
+            records_synced += 1
+            if 0 < max_records <= records_synced:
+                break
 
     except tap_spreadsheets_anywhere.format_handler.InvalidFormatError as ife:
         if table_spec.get('invalid_format_action','fail').lower() == "ignore":
