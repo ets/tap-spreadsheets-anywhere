@@ -47,7 +47,7 @@ def write_file(target_filename, table_spec, schema, max_records=-1):
             }
 
             try:
-                record_with_meta = [{**conversion.convert_row(row, schema), **metadata}]
+                record_with_meta = {**conversion.convert_row(row, schema), **metadata}
                 singer.write_record(table_spec['name'], record_with_meta)
             except BrokenPipeError as bpe:
                 LOGGER.error(

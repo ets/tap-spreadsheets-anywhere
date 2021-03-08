@@ -1,4 +1,6 @@
 import codecs
+import json
+import logging
 import unittest
 from unittest.mock import patch
 
@@ -8,6 +10,9 @@ from six import StringIO
 
 from tap_spreadsheets_anywhere import configuration, file_utils, csv_handler, json_handler, generate_schema
 from tap_spreadsheets_anywhere.format_handler import monkey_patch_streamreader, get_row_iterator
+
+
+LOGGER = logging.getLogger(__name__)
 
 TEST_TABLE_SPEC = {
     "tables": [
@@ -137,7 +142,7 @@ class TestFormatHandler(unittest.TestCase):
             self.assertTrue(row['id'].isnumeric(), "Parsed ID is not a number for: {}".format(row['id']))
 
     def test_smart_columns(self):
-        with patch('sys.stdout', new=StringIO()) as fake_out:
+        with patch('sys.stdout', new_callable=StringIO) as fake_out:
             records_streamed = 0
             table_spec = TEST_TABLE_SPEC['tables'][7]
             modified_since = dateutil.parser.parse(table_spec['start_date'])
@@ -147,8 +152,14 @@ class TestFormatHandler(unittest.TestCase):
             for t_file in target_files:
                 records_streamed += file_utils.write_file(t_file['key'], table_spec, schema.to_dict())
 
-            self.assertEqual(records_streamed, 6)
-            #TODO: verify that stdout received record data including smart columns
+            raw_records = fake_out.getvalue().split('\n')
+            records = [json.loads(raw) for raw in raw_records if raw]
+            self.assertEqual(records_streamed, len(records),"Number records written to the pipe differed from records read from the pipe.")
+            self.assertTrue(records[0]['type'] == "RECORD")
+            self.assertTrue(len(records[0]) == 3)
+            self.assertTrue(len(records[0]['record']) == 7)
+            self.assertTrue( "_smart_source_bucket" in records[0]['record'] )
+            self.assertTrue("_smart_source_lineno" in records[0]['record'])
 
 
     def test_local_bucket(self):
