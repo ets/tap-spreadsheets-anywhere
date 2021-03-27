@@ -21,6 +21,7 @@ CONFIG_CONTRACT = Schema({
         Optional('worksheet_name'): str,
         Optional('delimiter'): str,
         Optional('quotechar'): str,
+        Optional('json_path'): str,
         Optional('sample_rate'): int,
         Optional('max_sampling_read'): int,
         Optional('max_records_per_run'): int,
