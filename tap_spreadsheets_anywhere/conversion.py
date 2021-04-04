@@ -1,13 +1,13 @@
 import dateutil
 import pytz
 import logging
-from copy import deepcopy
+import pickle
 
 LOGGER = logging.getLogger(__name__)
 
 
 def convert_row(row, schema):
-    t_schema = deepcopy(schema)
+    t_schema = pickle.loads(pickle.dumps((schema))
     to_return = {}
     for key, value in row.items():
         if key in t_schema['properties']:
