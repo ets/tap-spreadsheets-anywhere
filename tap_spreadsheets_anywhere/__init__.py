@@ -94,7 +94,9 @@ def discover(config):
 
 def sync(config, state, catalog):
     # Loop over selected streams in catalog
-    for stream in catalog.get_selected_streams(state):
+    selected_streams = catalog.get_selected_streams(state)
+    LOGGER.info(f"Processing {len(selected_streams)} selected streams from Catalog")
+    for stream in selected_streams:
         LOGGER.info("Syncing stream:" + stream.tap_stream_id)
         catalog_schema = stream.schema.to_dict()
         table_spec = next((x for x in config['tables'] if x['name'] == stream.tap_stream_id), None)
@@ -155,6 +157,8 @@ def main():
         else:
             LOGGER.info(f"Generating catalog through sampling.")
             catalog = discover(tables_config)
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            LOGGER.debug(f"Catalog has streams: {catalog.to_dict()}")
         sync(tables_config, args.state, catalog)
 
 if __name__ == "__main__":

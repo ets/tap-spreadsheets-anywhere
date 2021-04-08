@@ -37,7 +37,7 @@ def get_legacy_row_iterator(table_spec, file_handle):
         try:
             sheet = workbook.sheet_by_name(table_spec["worksheet_name"])
         except Exception as e:
-            LOGGER.error("Unable to open specified sheet '"+table_spec["worksheet_name"]+"' - did you check the sheet name for spaces?")
+            LOGGER.error("Unable to open specified sheet '"+table_spec["worksheet_name"]+"' - did you check the workbook's sheet name for spaces?")
             raise e
     else:
         try:
@@ -65,7 +65,11 @@ def get_row_iterator(table_spec, file_handle):
     workbook = openpyxl.load_workbook(file_handle, read_only=True)
     
     if "worksheet_name" in table_spec:
-        active_sheet = workbook[table_spec["worksheet_name"]]
+        try:
+            active_sheet = workbook[table_spec["worksheet_name"]]
+        except Exception as e:
+            LOGGER.error("Unable to open specified sheet '"+table_spec["worksheet_name"]+"' - did you check the workbook's sheet name for spaces?")
+            raise e
     else:
         try:
             worksheets = workbook.worksheets
