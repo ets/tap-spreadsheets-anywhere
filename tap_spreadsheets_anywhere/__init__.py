@@ -94,9 +94,8 @@ def discover(config):
 
 def sync(config, state, catalog):
     # Loop over selected streams in catalog
-    selected_streams = catalog.get_selected_streams(state)
-    LOGGER.info(f"Processing {len(selected_streams)} selected streams from Catalog")
-    for stream in selected_streams:
+    LOGGER.info(f"Processing {len(list(catalog.get_selected_streams(state)))} selected streams from Catalog")
+    for stream in catalog.get_selected_streams(state):
         LOGGER.info("Syncing stream:" + stream.tap_stream_id)
         catalog_schema = stream.schema.to_dict()
         table_spec = next((x for x in config['tables'] if x['name'] == stream.tap_stream_id), None)
