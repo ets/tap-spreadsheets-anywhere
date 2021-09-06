@@ -24,6 +24,10 @@ def generator_wrapper(root_iterator):
 def get_row_iterator(table_spec, reader):
     try:
         json_array = json.load(reader)
+        json_path = table_spec.get('json_path', None)
+        if json_path is not None:
+            json_array = json_array[json_path]
+
         # throw a TypeError if the root json object can not be iterated
         return generator_wrapper(iter(json_array))
     except JSONDecodeError as jde:

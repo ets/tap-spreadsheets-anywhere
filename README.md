@@ -110,6 +110,7 @@ Each object in the 'tables' array describes one or more CSV or Excel spreadsheet
 - **worksheet_name**: (optional) the worksheet name to pull from in the targeted xls file(s). Only required when format is excel
 - **delimiter**: (optional) the delimiter to use when format is 'csv'. Defaults to a comma ',' but you can set delimiter to 'detect' to leverage the csv "Sniffer" for auto-detecting delimiter. 
 - **quotechar**: (optional) the character used to surround values that may contain delimiters - defaults to a double quote '"'
+- **json_path**: (optional) the JSON key under which the list of objets to use is located. Defaults to None, corresponding to an array at the top level of the JSON tree.
 
 ### Automatic Config Generation
 
