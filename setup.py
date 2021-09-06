@@ -16,7 +16,8 @@ setup(
         'boto3>=1.15.5',
         'google-cloud-storage>=1.31.2',
         'openpyxl',
-        'xlrd'
+        'xlrd',
+        'paramiko'
     ],
     entry_points="""
     [console_scripts]
