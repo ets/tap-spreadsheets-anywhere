@@ -59,6 +59,7 @@ The configuration is also captured in [tables_config_util.py](tap_spreadsheets_a
             "max_sampling_read": 2000,
             "max_sampled_files": 3,
             "prefer_number_vs_integer": true,
+            "prefer_schema_as_string": true,
             "selected": true,
 
             // for any field in the table, you can hardcode the json schema datatype to override
@@ -106,6 +107,7 @@ Each object in the 'tables' array describes one or more CSV or Excel spreadsheet
 - **max_sampled_files**: (optional) The maximum number of files in the targeted set that will be sampled. The default is 5.
 - **max_records_per_run**: (optional) The maximum number of records that should be written to this stream in a single sync run. The default is unlimited. 
 - **prefer_number_vs_integer**: (optional) If the discovery mode sampling process sees only integer values for a field, should `number` be used anyway so that floats are not considered errors? The default is false but true can help in situations where floats only appear rarely in sources and may not be detected through discovery sampling.
+- **prefer_schema_as_string**: (optional) Bool value either as true or false (default). Should the schema be all read as string by default.
 - **selected**: (optional) Should this table be synced. Defaults to true. Setting to false will skip this table on a sync run.
 - **worksheet_name**: (optional) the worksheet name to pull from in the targeted xls file(s). Only required when format is excel
 - **delimiter**: (optional) the delimiter to use when format is 'csv'. Defaults to a comma ',' but you can set delimiter to 'detect' to leverage the csv "Sniffer" for auto-detecting delimiter. 
