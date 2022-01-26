@@ -146,7 +146,7 @@ def get_matching_objects(table_spec, modified_since=None):
         last_modified = obj['LastModified']
 
         # noinspection PyTypeChecker
-        if matcher.search(key) and (modified_since is None or modified_since < last_modified):
+        if matcher.match(key) and (modified_since is None or modified_since < last_modified):
             LOGGER.debug('Including key "{}"'.format(key))
             LOGGER.debug('Last modified: {}'.format(last_modified) + ' comparing to {} '.format(modified_since))
             to_return.append({'key': key, 'last_modified': last_modified})
