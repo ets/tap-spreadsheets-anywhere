@@ -4,6 +4,7 @@ from codecs import StreamReader
 import tap_spreadsheets_anywhere.csv_handler
 import tap_spreadsheets_anywhere.excel_handler
 import tap_spreadsheets_anywhere.json_handler
+import tap_spreadsheets_anywhere.jsonl_handler
 
 
 class InvalidFormatError(Exception):
@@ -30,8 +31,8 @@ def monkey_patch_streamreader(streamreader):
 
 
 def mp_readline(self, size=None, keepends=False):
-    """ 
-        Modified version of readline for StreamReader that avoids the use of splitlines 
+    """
+        Modified version of readline for StreamReader that avoids the use of splitlines
         in favor of a call to split(self.mp_newline)
         This supports poorly formatted CSVs that the author has sadly seen in the wild
         from commercial vendors.
@@ -112,6 +113,8 @@ def get_row_iterator(table_spec, uri):
             format = 'excel'
         elif lowered_uri.endswith(".json") or lowered_uri.endswith(".js"):
             format = 'json'
+        elif lowered_uri.endswith(".jsonl"):
+            format = 'jsonl'
         elif lowered_uri.endswith(".csv"):
             format = 'csv'
         else:
@@ -145,6 +148,9 @@ def get_row_iterator(table_spec, uri):
         elif format == 'json':
             reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r')
             return tap_spreadsheets_anywhere.json_handler.get_row_iterator(table_spec, reader)
+        elif format == 'jsonl':
+            reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r')
+            return tap_spreadsheets_anywhere.jsonl_handler.get_row_iterator(table_spec, reader)
     except (ValueError,TypeError) as err:
         raise InvalidFormatError(uri,message=err)
 
