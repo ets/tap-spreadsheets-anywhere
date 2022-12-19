@@ -14,7 +14,7 @@
             "prefer_number_vs_integer": true,
             "schema_overrides": {
                 "column_name": {
-                    "type": "integer",
+                    "type": "integer"
                 }
             }
         },
@@ -27,7 +27,7 @@
             "format": "excel",
             "schema_overrides": {
                 "id": {
-                    "type": "integer",
+                    "type": "integer"
                 }
             }
         }

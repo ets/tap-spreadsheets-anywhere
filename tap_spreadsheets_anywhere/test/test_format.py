@@ -24,6 +24,7 @@ TEST_TABLE_SPEC = {
             "key_properties": ["id"],
             "format": "csv",
             "prefer_number_vs_integer": True,
+            "prefer_schema_as_string": True,
             "universal_newlines": False,
             "sample_rate": 5,
             "max_sampling_read": 2000,

@@ -130,23 +130,28 @@ def pick_datatype(counts,prefer_number_vs_integer=False):
     return to_return
 
 
-def generate_schema(samples,prefer_number_vs_integer=False):
+def generate_schema(samples,prefer_number_vs_integer=False, prefer_schema_as_string=False):
     to_return = {}
     counts = count_samples(samples)
 
     for key, value in counts.items():
-        datatype = pick_datatype(value,prefer_number_vs_integer)
-        # if "survey_responses_count" == key:
-        #     LOGGER.error(f"Key '{key}' held {value} and was typed as {datatype} with prefer_number_vs_integer={prefer_number_vs_integer}")
-
-        if datatype == 'date-time':
+        if(prefer_schema_as_string):
             to_return[key] = {
-                'type': ['null', 'string'],
-                'format': 'date-time',
+                'type':['null','string']
             }
         else:
-            to_return[key] = {
-                'type': ['null', datatype],
-            }
+            datatype = pick_datatype(value,prefer_number_vs_integer)
+            # if "survey_responses_count" == key:
+            #     LOGGER.error(f"Key '{key}' held {value} and was typed as {datatype} with prefer_number_vs_integer={prefer_number_vs_integer}")
+
+            if datatype == 'date-time':
+                to_return[key] = {
+                    'type': ['null', 'string'],
+                    'format': 'date-time',
+                }
+            else:
+                to_return[key] = {
+                    'type': ['null', datatype],
+                }
 
     return to_return
