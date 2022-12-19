@@ -1,6 +1,4 @@
-import cgi
 import re
-from urllib.parse import unquote
 
 import pytz
 from datetime import datetime, timezone
@@ -8,7 +6,6 @@ from datetime import datetime, timezone
 import dateutil
 import requests
 import singer
-from singer.transform import Transformer
 import boto3
 from google.cloud import storage
 import os, logging
@@ -16,7 +13,6 @@ from os import walk
 import tap_spreadsheets_anywhere.format_handler
 import tap_spreadsheets_anywhere.conversion as conversion
 import smart_open.ssh as ssh_transport
-from dateutil.parser import parse as parsedate
 
 LOGGER = logging.getLogger(__name__)
 

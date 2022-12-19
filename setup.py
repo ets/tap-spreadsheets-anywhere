@@ -14,7 +14,8 @@ setup(
         'smart_open>=2.1',
         'voluptuous>=0.10.5',
         'boto3>=1.15.5',
-        'google-cloud-storage>=1.31.2',
+        'google-cloud-storage>=2.7.0',
+        'protobuf>=4.21.12',
         'openpyxl',
         'xlrd',
         'paramiko'
@@ -25,4 +26,7 @@ setup(
     """,
     packages=["tap_spreadsheets_anywhere"],
     include_package_data=True,
+    tests_require=[
+        'pytest'
+    ]
 )
