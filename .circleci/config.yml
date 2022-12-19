@@ -16,9 +16,9 @@ jobs:
           pkg-manager: pip
           pypi-cache: false
       - run:
-        command: |
-          sudo python setup.py install
-        name: Install Dependencies
+          command: |
+            sudo python setup.py install
+          name: Install Dependencies
       - run:
           command: |
             pytest -s
