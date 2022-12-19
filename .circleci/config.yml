@@ -9,15 +9,10 @@ jobs:
     executor: python/default
     steps:
       - checkout
-      - python/install-packages:
-          pkg-manager: pip
-      - python/install-packages:
-          args: pytest
-          pkg-manager: pip
-          pypi-cache: false
       - run:
           command: |
             sudo python setup.py install
+            sudo pip install pytest
           name: Install Dependencies
       - run:
           command: |
