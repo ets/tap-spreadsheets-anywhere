@@ -191,7 +191,7 @@ class TestFormatHandler(unittest.TestCase):
         iterator = get_row_iterator(TEST_TABLE_SPEC['tables'][5], target_uri)
 
         row = next(iterator)
-        self.assertTrue( row['1976'] == '1976', "Row did not contain expected data")
+        self.assertTrue( row['year'] == '1976', "Row did not contain expected data")
 
     def test_renamed_https_object(self):
         table_spec = TEST_TABLE_SPEC['tables'][6]
