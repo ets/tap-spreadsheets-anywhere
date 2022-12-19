@@ -3,18 +3,25 @@ version: 2.1
 orbs:
   python: circleci/python@2.0.3
 
+
 jobs:
-  build-and-test:
+  build:
     executor: python/default
     steps:
-      - checkout      
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+      - python/install-packages:
+          args: pytest
+          pkg-manager: pip
+          pypi-cache: false
+      - run:
+        command: |
+          sudo python setup.py install
+        name: Install Dependencies
       - run:
           command: |
-            sudo python setup.py install
-            sudo pip install pytest
-          name: Install Dependencies      
-      - run:
-          command: pytest -s
+            pytest -s
           name: Test
 
 workflows:
