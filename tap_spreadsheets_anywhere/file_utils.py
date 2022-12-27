@@ -28,6 +28,14 @@ def resolve_target_uri(table_spec, target_filename):
         return table_spec['path'] + "/" + target_filename
 
 
+def _hide_credentials(path):
+    import re
+    if path.startswith('sftp'):
+        return re.sub('sftp://.*?@', "", uri, flags=re.DOTALL)
+    elif path.startswith('ftp'):
+        return re.sub('ftp://.*?@', "", uri, flags=re.DOTALL)
+    return path
+
 
 def write_file(target_filename, table_spec, schema, max_records=-1):
     LOGGER.info('Syncing file "{}".'.format(target_filename))
@@ -37,7 +45,7 @@ def write_file(target_filename, table_spec, schema, max_records=-1):
         iterator = tap_spreadsheets_anywhere.format_handler.get_row_iterator(table_spec, target_uri)
         for row in iterator:
             metadata = {
-                '_smart_source_bucket': table_spec['path'],
+                '_smart_source_bucket': _hide_credentials(table_spec['path']),
                 '_smart_source_file': target_filename,
                 # index zero, +1 for header row
                 '_smart_source_lineno': records_synced + 2
