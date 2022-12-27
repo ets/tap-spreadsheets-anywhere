@@ -223,11 +223,11 @@ def list_files_in_ftp_server(uri, search_prefix=None):
     from stat import S_ISREG
     import fnmatch
     for row in ftp.mlsd(uri_path):
-    if search_prefix is None or fnmatch.fnmatch(entry[0],search_prefix):
-        if row[1]['type'] == 'file':
-            entries.append({'Key':row[0],'LastModified':datetime.strptime(row[1]['modify'], '%Y%m%d%H%M%S').replace(tzinfo=timezone.utc)})
-        if len(entries) > max_results:
-            raise print(f"Read more than {max_results} records from the path {uri_path}. Use a more specific "
+        if search_prefix is None or fnmatch.fnmatch(entry[0],search_prefix):
+            if row[1]['type'] == 'file':
+                entries.append({'Key':row[0],'LastModified':datetime.strptime(row[1]['modify'], '%Y%m%d%H%M%S').replace(tzinfo=timezone.utc)})
+            if len(entries) > max_results:
+                raise print(f"Read more than {max_results} records from the path {uri_path}. Use a more specific "
                              f"search_prefix")
 
     LOGGER.info("Found {} files.".format(entries))
