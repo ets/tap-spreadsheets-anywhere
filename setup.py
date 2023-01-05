@@ -18,7 +18,8 @@ setup(
         'protobuf>=4.21.12',
         'openpyxl',
         'xlrd',
-        'paramiko'
+        'paramiko',
+        'azure-storage-blob>=12.14.0'
     ],
     entry_points="""
     [console_scripts]
