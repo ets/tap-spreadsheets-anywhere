@@ -115,6 +115,7 @@ def parse_path(path):
 
 def get_matching_objects(table_spec, modified_since=None):
     protocol, bucket = parse_path(table_spec['path'])
+    LOGGER.info(f"Getting protocol {protocol} and bucket {bucket} from {table_spec['path']}")
 
     # TODO Breakout the transport schemes here similar to the registry/loading pattern used by smart_open
     if protocol == 's3':
