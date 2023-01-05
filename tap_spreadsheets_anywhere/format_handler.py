@@ -6,6 +6,7 @@ import tap_spreadsheets_anywhere.excel_handler
 import tap_spreadsheets_anywhere.json_handler
 import tap_spreadsheets_anywhere.jsonl_handler
 from azure.storage.blob import BlobServiceClient
+import os
 
 class InvalidFormatError(Exception):
     def __init__(self, fname, message="The file was not in the expected format"):
