@@ -131,7 +131,7 @@ def get_matching_objects(table_spec, modified_since=None):
     elif protocol in ["azure"]:
         target_objects = list_files_in_azure_bucket(bucket,table_spec.get('search_prefix'))
     else:
-        raise ValueError("Protocol {} not yet supported. Pull Requests are welcome!")
+        raise ValueError("Protocol {} (possibly azure) not yet supported. Pull Requests are welcome!")
 
     pattern = table_spec['pattern']
     matcher = re.compile(pattern)
