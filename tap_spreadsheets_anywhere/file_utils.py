@@ -31,9 +31,9 @@ def resolve_target_uri(table_spec, target_filename):
 def _hide_credentials(path):
     import re
     if path.startswith('sftp'):
-        return re.sub('sftp://.*?@', "", path, flags=re.DOTALL)
+        return re.sub('sftp://.*?@', "********", path, flags=re.DOTALL)
     elif path.startswith('ftp'):
-        return re.sub('ftp://.*?@', "", path, flags=re.DOTALL)
+        return re.sub('ftp://.*?@', "********", path, flags=re.DOTALL)
     return path
 
 
