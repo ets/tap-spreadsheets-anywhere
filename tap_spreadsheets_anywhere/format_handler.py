@@ -19,19 +19,38 @@ class InvalidFormatError(Exception):
 
 
 def get_streamreader(uri, universal_newlines=True,newline='',open_mode='r'):
-    if uri.startswith('azure://'):
-        connect_str = os.environ['AZURE_STORAGE_CONNECTION_STRING']
-        transport_params = {
-            'client': BlobServiceClient.from_connection_string(connect_str),
-        }
-        streamreader = smart_open.open(uri, open_mode, newline=newline, errors='surrogateescape', 
-                        transport_params=transport_params)
-        return streamreader
+    kwarg_dispatch = {
+        "azure": lambda: {
+            "transport_params": {
+                "client": BlobServiceClient.from_connection_string(
+                    os.environ['AZURE_STORAGE_CONNECTION_STRING'],
+                )
+            }
+        },
+    }
 
-    streamreader = smart_open.open(uri, open_mode, newline=newline, errors='surrogateescape')
+    SCHEME_SEP = "://"
+    kwargs = kwarg_dispatch.get(uri.split(SCHEME_SEP, 1)[0], lambda: {})()
+
+    streamreader = smart_open.open(uri, open_mode, newline=newline, errors='surrogateescape', **kwargs)
+
     if not universal_newlines and isinstance(streamreader, StreamReader):
         return monkey_patch_streamreader(streamreader)
     return streamreader
+
+    # if uri.startswith('azure://'):
+    #     connect_str = os.environ['AZURE_STORAGE_CONNECTION_STRING']
+    #     transport_params = {
+    #         'client': BlobServiceClient.from_connection_string(connect_str),
+    #     }
+    #     streamreader = smart_open.open(uri, open_mode, newline=newline, errors='surrogateescape', 
+    #                     transport_params=transport_params)
+    #     return streamreader
+
+    # streamreader = smart_open.open(uri, open_mode, newline=newline, errors='surrogateescape')
+    # if not universal_newlines and isinstance(streamreader, StreamReader):
+    #     return monkey_patch_streamreader(streamreader)
+    # return streamreader
 
 
 def monkey_patch_streamreader(streamreader):
