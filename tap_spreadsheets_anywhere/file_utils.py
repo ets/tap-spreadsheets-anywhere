@@ -115,7 +115,6 @@ def parse_path(path):
 
 def get_matching_objects(table_spec, modified_since=None):
     protocol, bucket = parse_path(table_spec['path'])
-    LOGGER.info(f"Getting protocol {protocol} and bucket {bucket} from {table_spec['path']}")
 
     # TODO Breakout the transport schemes here similar to the registry/loading pattern used by smart_open
     if protocol == 's3':
@@ -131,7 +130,7 @@ def get_matching_objects(table_spec, modified_since=None):
     elif protocol in ["azure"]:
         target_objects = list_files_in_azure_bucket(bucket,table_spec.get('search_prefix'))
     else:
-        raise ValueError("Protocol {} (possibly azure) not yet supported. Pull Requests are welcome!")
+        raise ValueError("Protocol {} not yet supported. Pull Requests are welcome!")
 
     pattern = table_spec['pattern']
     matcher = re.compile(pattern)
