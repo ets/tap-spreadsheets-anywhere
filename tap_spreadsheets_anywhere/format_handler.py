@@ -38,20 +38,6 @@ def get_streamreader(uri, universal_newlines=True,newline='',open_mode='r'):
         return monkey_patch_streamreader(streamreader)
     return streamreader
 
-    # if uri.startswith('azure://'):
-    #     connect_str = os.environ['AZURE_STORAGE_CONNECTION_STRING']
-    #     transport_params = {
-    #         'client': BlobServiceClient.from_connection_string(connect_str),
-    #     }
-    #     streamreader = smart_open.open(uri, open_mode, newline=newline, errors='surrogateescape', 
-    #                     transport_params=transport_params)
-    #     return streamreader
-
-    # streamreader = smart_open.open(uri, open_mode, newline=newline, errors='surrogateescape')
-    # if not universal_newlines and isinstance(streamreader, StreamReader):
-    #     return monkey_patch_streamreader(streamreader)
-    # return streamreader
-
 
 def monkey_patch_streamreader(streamreader):
     streamreader.mp_newline = '\n'
