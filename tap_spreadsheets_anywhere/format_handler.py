@@ -5,7 +5,8 @@ import tap_spreadsheets_anywhere.csv_handler
 import tap_spreadsheets_anywhere.excel_handler
 import tap_spreadsheets_anywhere.json_handler
 import tap_spreadsheets_anywhere.jsonl_handler
-
+from azure.storage.blob import BlobServiceClient
+import os
 
 class InvalidFormatError(Exception):
     def __init__(self, fname, message="The file was not in the expected format"):
@@ -18,7 +19,21 @@ class InvalidFormatError(Exception):
 
 
 def get_streamreader(uri, universal_newlines=True,newline='',open_mode='r'):
-    streamreader = smart_open.open(uri, open_mode, newline=newline, errors='surrogateescape')
+    kwarg_dispatch = {
+        "azure": lambda: {
+            "transport_params": {
+                "client": BlobServiceClient.from_connection_string(
+                    os.environ['AZURE_STORAGE_CONNECTION_STRING'],
+                )
+            }
+        },
+    }
+
+    SCHEME_SEP = "://"
+    kwargs = kwarg_dispatch.get(uri.split(SCHEME_SEP, 1)[0], lambda: {})()
+
+    streamreader = smart_open.open(uri, open_mode, newline=newline, errors='surrogateescape', **kwargs)
+
     if not universal_newlines and isinstance(streamreader, StreamReader):
         return monkey_patch_streamreader(streamreader)
     return streamreader
