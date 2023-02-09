@@ -21,8 +21,8 @@ def generator_wrapper(reader):
             if not formatted_key:
                 formatted_key = '' # default to empty string for key
 
-            # remove non-word, non-whitespace characters
-            formatted_key = re.sub(r"[^\w\s]", '', formatted_key)
+            # replace non-word, non-whitespace characters with underscores
+            formatted_key = re.sub(r"[^\w\s]", '_', formatted_key)
 
             # replace whitespace with underscores
             formatted_key = re.sub(r"\s+", '_', formatted_key)

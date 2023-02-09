@@ -13,8 +13,8 @@ def generator_wrapper(root_iterator):
                 key = '_smart_extra'
 
             formatted_key = key
-            # remove non-word, non-whitespace characters
-            formatted_key = re.sub(r"[^\w\s]", '', formatted_key)
+            # replace non-word, non-whitespace characters with underscores
+            formatted_key = re.sub(r"[^\w\s]", '_', formatted_key)
             # replace whitespace with underscores
             formatted_key = re.sub(r"\s+", '_', formatted_key)
             to_return[formatted_key.lower()] = value
