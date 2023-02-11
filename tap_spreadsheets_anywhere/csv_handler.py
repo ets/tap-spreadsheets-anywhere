@@ -10,14 +10,9 @@ def generator_wrapper(reader):
         for key, value in row.items():
             if key is None:
                 key = '_smart_extra'
-
             formatted_key = key
-
-            # replace non-word, non-whitespace characters with underscores
-            formatted_key = re.sub(r"[^\w\s]", '_', formatted_key)
-
-            # replace whitespace with underscores
-            formatted_key = re.sub(r"\s+", '_', formatted_key)
+            # replace non-word characters with underscores
+            formatted_key = re.sub(r"\W+", '_', formatted_key)
             to_return[formatted_key.lower()] = value
         yield to_return
 
