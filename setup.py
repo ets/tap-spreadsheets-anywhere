@@ -6,7 +6,7 @@ setup(
     version="0.2.0",
     description="Singer.io tap for extracting spreadsheet data from cloud storage",
     author="Eric Simmerman",
-    url="https://github.com/ets/tap-spreadsheets-anywhere",
+    url="https://github.com/prognomiq/tap-spreadsheets-anywhere",
     classifiers=["Programming Language :: Python :: 3 :: Only"],
     py_modules=["tap_spreadsheets_anywhere"],
     install_requires=[
