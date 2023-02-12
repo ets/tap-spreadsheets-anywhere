@@ -20,7 +20,7 @@ def generator_wrapper(reader):
             if not formatted_key:
                 formatted_key = '' # default to empty string for key
             # replace non-word characters with underscores
-            formatted_key = re.sub(r"\W+", '_', formatted_key)
+            formatted_key = re.sub(r"\s+", '_', formatted_key)
             to_return[formatted_key.lower()] = cell.value
         yield to_return
 
