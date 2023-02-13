@@ -14,7 +14,7 @@ def convert_row(row, schema):
             field_schema = t_schema['properties'][key]
             declared_types = field_schema.get('type', ['null', 'string'])
         else:
-            declared_types = ['string','null']
+            declared_types = ['string', 'null']
 
         LOGGER.debug('Converting {} value {} to {}'.format(key, value, declared_types))
         coerced = coerce(value, declared_types)
@@ -22,7 +22,8 @@ def convert_row(row, schema):
 
     return to_return
 
-def coerce(datum,declared_types):
+
+def coerce(datum, declared_types):
     if datum is None or datum == '':
         return None
 
@@ -36,12 +37,27 @@ def coerce(datum,declared_types):
     return coerced
 
 
+def bool_cast(value):
+    lower_value = str(value).lower()
+    if lower_value in ["true", "yes", "1"]:
+        return True, True
+    elif lower_value in ["false", "no", "0"]:
+        return True, False
+    return False, None
+
+
 def convert(datum, desired_type=None):
     """
     Returns tuple of (converted_data_point, json_schema_type,).
     """
     if datum is None or str(datum).strip() == '':
         return None, None,
+
+    if desired_type in (None, 'boolean'):
+        is_bool, casted_value = bool_cast(datum)
+        if is_bool:
+            return casted_value, 'boolean'
+
 
     if desired_type in (None, 'integer'):
         try:
@@ -98,9 +114,9 @@ def count_samples(samples):
     return to_return
 
 
-def pick_datatype(counts,prefer_number_vs_integer=False):
+def pick_datatype(counts, prefer_number_vs_integer=False):
     """
-    If the underlying records are ONLY of type `integer`, `number`,
+    If the underlying records are ONLY of type `boolean`, `integer`, `number`,
     or `date-time`, then return that datatype.
 
     If the underlying records are of type `integer` and `number` only,
@@ -111,7 +127,9 @@ def pick_datatype(counts,prefer_number_vs_integer=False):
     to_return = 'string'
 
     if len(counts) == 1:
-        if counts.get('integer', 0) > 0:
+        if counts.get('boolean', 0) > 0:
+            to_return = 'boolean'
+        elif counts.get('integer', 0) > 0:
             to_return = 'number' if prefer_number_vs_integer else 'integer'
         elif counts.get('number', 0) > 0:
             to_return = 'number'
@@ -130,17 +148,17 @@ def pick_datatype(counts,prefer_number_vs_integer=False):
     return to_return
 
 
-def generate_schema(samples,prefer_number_vs_integer=False, prefer_schema_as_string=False):
+def generate_schema(samples, prefer_number_vs_integer=False, prefer_schema_as_string=False):
     to_return = {}
     counts = count_samples(samples)
 
     for key, value in counts.items():
-        if(prefer_schema_as_string):
+        if (prefer_schema_as_string):
             to_return[key] = {
-                'type':['null','string']
+                'type': ['null', 'string']
             }
         else:
-            datatype = pick_datatype(value,prefer_number_vs_integer)
+            datatype = pick_datatype(value, prefer_number_vs_integer)
             # if "survey_responses_count" == key:
             #     LOGGER.error(f"Key '{key}' held {value} and was typed as {datatype} with prefer_number_vs_integer={prefer_number_vs_integer}")
 
