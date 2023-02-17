@@ -19,6 +19,7 @@ CONFIG_CONTRACT = Schema({
         Optional('field_names'): [str],
         Optional('search_prefix'): str,
         Optional('worksheet_name'): str,
+        Optional('data_only'): bool,
         Optional('delimiter'): str,
         Optional('quotechar'): str,
         Optional('json_path'): str,
