@@ -8,6 +8,7 @@
             "key_properties": [],
             "format": "csv",
             "universal_newlines": false,
+            "skip_initial": 0,
             "sample_rate": 10,
             "max_sampling_read": 2000,
             "max_sampled_files": 3,

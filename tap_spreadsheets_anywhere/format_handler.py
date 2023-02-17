@@ -121,6 +121,7 @@ def mp_readline(self, size=None, keepends=False):
 
 def get_row_iterator(table_spec, uri):
     universal_newlines = table_spec['universal_newlines'] if 'universal_newlines' in table_spec else True
+    skip_initial = table_spec.get("skip_initial", 0)
 
     if 'format' not in table_spec or table_spec['format'] == 'detect':
         lowered_uri = uri.lower()
@@ -153,19 +154,23 @@ def get_row_iterator(table_spec, uri):
     try:
         if format == 'csv':
             reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r')
-            return tap_spreadsheets_anywhere.csv_handler.get_row_iterator(table_spec, reader)
+            iterator = tap_spreadsheets_anywhere.csv_handler.get_row_iterator(table_spec, reader)
         elif format == 'excel':
             reader = get_streamreader(uri, universal_newlines=universal_newlines,newline=None, open_mode='rb')
             if uri.lower().endswith(".xls"):
-                return tap_spreadsheets_anywhere.excel_handler.get_legacy_row_iterator(table_spec, reader)
+                iterator = tap_spreadsheets_anywhere.excel_handler.get_legacy_row_iterator(table_spec, reader)
             else:
-                return tap_spreadsheets_anywhere.excel_handler.get_row_iterator(table_spec, reader)
+                iterator = tap_spreadsheets_anywhere.excel_handler.get_row_iterator(table_spec, reader)
         elif format == 'json':
             reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r')
-            return tap_spreadsheets_anywhere.json_handler.get_row_iterator(table_spec, reader)
+            iterator = tap_spreadsheets_anywhere.json_handler.get_row_iterator(table_spec, reader)
         elif format == 'jsonl':
             reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r')
-            return tap_spreadsheets_anywhere.jsonl_handler.get_row_iterator(table_spec, reader)
+            iterator = tap_spreadsheets_anywhere.jsonl_handler.get_row_iterator(table_spec, reader)
     except (ValueError,TypeError) as err:
         raise InvalidFormatError(uri,message=err)
 
+    for _ in range(skip_initial):
+        next(iterator)
+
+    return iterator

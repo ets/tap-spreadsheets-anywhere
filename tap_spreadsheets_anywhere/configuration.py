@@ -15,6 +15,7 @@ CONFIG_CONTRACT = Schema({
         Required('format'): Any('csv', 'excel', 'json', 'jsonl', 'detect'),
         Optional('invalid_format_action'): Any('ignore','fail'),
         Optional('universal_newlines'): bool,
+        Optional('skip_initial'): int,
         Optional('selected'): bool,
         Optional('field_names'): [str],
         Optional('search_prefix'): str,
