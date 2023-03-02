@@ -39,9 +39,9 @@ def coerce(datum, declared_types):
 
 def bool_cast(value):
     lower_value = str(value).lower()
-    if lower_value in ["true", "yes"]:
+    if lower_value in ["true", "yes", "1"]:
         return True, True
-    elif lower_value in ["false", "no"]:
+    elif lower_value in ["false", "no", "0"]:
         return True, False
     return False, None
 
@@ -56,7 +56,7 @@ def convert(datum, desired_type=None):
     if desired_type in (None, 'boolean'):
         is_bool, casted_value = bool_cast(datum)
         if is_bool:
-            return casted_value, 'boolean'
+            return casted_value, 'boolean',
 
 
     if desired_type in (None, 'integer'):
