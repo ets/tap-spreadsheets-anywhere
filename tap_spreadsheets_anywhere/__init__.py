@@ -88,7 +88,8 @@ def discover(config):
                 )
             )
         except Exception as err:
-            LOGGER.error(f"Unable to write Catalog entry for '{table_spec['name']}' - it will be skipped due to error {err}")
+            LOGGER.error(f"Unable to write Catalog entry for '{table_spec['name']}' - it will be skipped due too error {err}")
+            exit(1)
 
     return Catalog(streams)
 
