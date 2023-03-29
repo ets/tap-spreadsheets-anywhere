@@ -244,6 +244,8 @@ def list_files_in_ftp_server(uri, search_prefix=None):
     LOGGER.info("Found {} files.".format(entries))
     return entries
 
+def raise_error(error):
+    raise error
 
 def list_files_in_local_bucket(bucket, search_prefix=None):
     local_filenames = []
@@ -253,7 +255,7 @@ def list_files_in_local_bucket(bucket, search_prefix=None):
 
     LOGGER.info(f"Walking {path}.")
     max_results = 10000
-    for (dirpath, dirnames, filenames) in walk(path):
+    for (dirpath, dirnames, filenames) in walk(path, onerror=raise_error):
         for filename in filenames:
             abspath = os.path.join(dirpath,filename)
             relpath = os.path.relpath(abspath, path)
