@@ -8,11 +8,11 @@ TEST_TABLE_SPEC = {
     "tables": [
         {
             "path": "file://./tap_spreadsheets_anywhere/test",
-            "name": "badnewlines",
+            "name": "list",
             "pattern": ".*\\.json",
             "start_date": "2017-05-01T00:00:00Z",
             "key_properties": [],
-            "format": "detect"
+            "format": "json"
         },
         {
             "path": "file://./tap_spreadsheets_anywhere/test",
@@ -21,7 +21,7 @@ TEST_TABLE_SPEC = {
             "start_date": "2017-05-01T00:00:00Z",
             "key_properties": [],
             "json_path": "someKey",
-            "format": "detect"
+            "format": "json"
         },
         {
             "path": "file://./tap_spreadsheets_anywhere/test",
@@ -30,7 +30,7 @@ TEST_TABLE_SPEC = {
             "start_date": "2017-05-01T00:00:00Z",
             "key_properties": [],
             "json_path": "response.data[*]",
-            "format": "detect"
+            "format": "json"
         }
     ]
 }
