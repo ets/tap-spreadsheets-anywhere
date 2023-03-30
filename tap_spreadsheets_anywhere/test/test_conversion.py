@@ -38,7 +38,7 @@ class TestConverter(unittest.TestCase):
         # strings
         self.assertEqual(convert('4 o clock'), ('4 o clock', 'string'))
 
-        # objects
+    def test_convert_objects(self):
         self.assertEqual(convert("{'k': 'v','k': 'v'}"), ("{'k': 'v','k': 'v'}", 'string'))
         self.assertEqual(convert({'k': 'v','k': 'v'}), ({'k': 'v','k': 'v'}, 'object'))
         self.assertEqual(convert({'k': 'v','k': 'v'}, 'object'), ({'k': 'v','k': 'v'}, 'object'))
@@ -59,7 +59,6 @@ class TestConverter(unittest.TestCase):
         self.assertEqual(pick_datatype({'string': 1}), 'string')
         self.assertEqual(pick_datatype({'integer': 1}), 'integer')
         self.assertEqual(pick_datatype({'number': 1}), 'number')
-        self.assertEqual(pick_datatype({'object': 1}), 'object')
 
         self.assertEqual(pick_datatype({'number': 1,
                                         'integer': 1}), 'number')
@@ -68,9 +67,12 @@ class TestConverter(unittest.TestCase):
                                         'integer': 1}), 'string')
         self.assertEqual(pick_datatype({'string': 1,
                                         'number': 1}), 'string')
-        self.assertEqual(pick_datatype({'string': 1,
-                                        'object': 1}), 'string')
         self.assertEqual(pick_datatype({}), 'string')
+
+    def test_pick_datatype_objects(self):
+        self.assertEqual(pick_datatype({'object': 1}), 'object')
+        self.assertEqual(pick_datatype({'string': 1,
+                                'object': 1}), 'string')
 
     def test_generate_schema(self):
         self.assertEqual(
@@ -97,6 +99,7 @@ class TestConverter(unittest.TestCase):
             {'id': {'type': ['null', 'integer'],},
              'date': {'type': ['null', 'string'],}})
 
+    def test_generate_schema_objects(self):
         self.assertEqual(
             generate_schema([{'id': '1', 'obj': { 'date': '2017-01-01', 'count': 100 }},
                              {'id': '2', 'obj': { 'date': '2017-01-01', 'count': 0 }}]),
