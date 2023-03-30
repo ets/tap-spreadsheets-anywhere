@@ -38,6 +38,11 @@ class TestConverter(unittest.TestCase):
         # strings
         self.assertEqual(convert('4 o clock'), ('4 o clock', 'string'))
 
+        # objects
+        self.assertEqual(convert("{'k': 'v','k': 'v'}"), ("{'k': 'v','k': 'v'}", 'string'))
+        self.assertEqual(convert({'k': 'v','k': 'v'}), ({'k': 'v','k': 'v'}, 'object'))
+        self.assertEqual(convert({'k': 'v','k': 'v'}, 'object'), ({'k': 'v','k': 'v'}, 'object'))
+
     def test_count_sample(self):
         self.assertEqual(
             count_sample({'id': '1', 'first_name': 'Connor'}),
@@ -54,6 +59,7 @@ class TestConverter(unittest.TestCase):
         self.assertEqual(pick_datatype({'string': 1}), 'string')
         self.assertEqual(pick_datatype({'integer': 1}), 'integer')
         self.assertEqual(pick_datatype({'number': 1}), 'number')
+        self.assertEqual(pick_datatype({'object': 1}), 'object')
 
         self.assertEqual(pick_datatype({'number': 1,
                                         'integer': 1}), 'number')
@@ -62,6 +68,8 @@ class TestConverter(unittest.TestCase):
                                         'integer': 1}), 'string')
         self.assertEqual(pick_datatype({'string': 1,
                                         'number': 1}), 'string')
+        self.assertEqual(pick_datatype({'string': 1,
+                                        'object': 1}), 'string')
         self.assertEqual(pick_datatype({}), 'string')
 
     def test_generate_schema(self):
@@ -88,3 +96,9 @@ class TestConverter(unittest.TestCase):
                              {'id': '2', 'date': '2017-01-02'}]),
             {'id': {'type': ['null', 'integer'],},
              'date': {'type': ['null', 'string'],}})
+
+        self.assertEqual(
+            generate_schema([{'id': '1', 'obj': { 'date': '2017-01-01', 'count': 100 }},
+                             {'id': '2', 'obj': { 'date': '2017-01-01', 'count': 0 }}]),
+            {'id': {'type': ['null', 'integer'],},
+             'obj': {'type': ['null', 'object'],}})
