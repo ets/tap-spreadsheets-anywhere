@@ -6,6 +6,7 @@ LOGGER = logging.getLogger(__name__)
 
 def generator_wrapper(reader):
     for row in reader:
+        # TODO: OrderedDict here?
         to_return = {}
         for key, value in row.items():
             if key is None:
@@ -18,6 +19,7 @@ def generator_wrapper(reader):
 
             # replace whitespace with underscores
             formatted_key = re.sub(r"\s+", '_', formatted_key)
+            # lowercase is here
             to_return[formatted_key.lower()] = value
         yield to_return
 

@@ -6,6 +6,8 @@ from voluptuous import Schema, Required, Any, Optional
 LOGGER = logging.getLogger(__name__)
 
 CONFIG_CONTRACT = Schema({
+    Optional('s3_stage_bucket'): str,
+    Optional('s3_arn_role'): str,
     Required('tables'): [{
         Required('path'): str,
         Required('name'): str,
@@ -34,7 +36,8 @@ CONFIG_CONTRACT = Schema({
                 Required('type'): Any(Any('null','string','integer','number','date-time'),
                                       [Any('null','string','integer','number','date-time')])
             }
-        }
+        },
+        Optional('batch'): bool,
     }]
 })
 

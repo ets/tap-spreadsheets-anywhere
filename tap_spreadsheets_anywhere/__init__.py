@@ -9,6 +9,7 @@ from singer.catalog import Catalog, CatalogEntry
 from singer.schema import Schema
 
 from tap_spreadsheets_anywhere.configuration import Config
+from tap_spreadsheets_anywhere.s3_batch_messages import process_batch
 import tap_spreadsheets_anywhere.conversion as conversion
 import tap_spreadsheets_anywhere.file_utils as file_utils
 
@@ -41,11 +42,14 @@ def override_schema_with_config(inferred_schema, table_spec):
 
 
 def generate_schema(table_spec, samples):
-    metadata_schema = {
-        '_smart_source_bucket': {'type': 'string'},
-        '_smart_source_file': {'type': 'string'},
-        '_smart_source_lineno': {'type': 'integer'},
-    }
+    if table_spec.get('batch'):
+        metadata_schema = {}
+    else:
+        metadata_schema = {
+            '_smart_source_bucket': {'type': 'string'},
+            '_smart_source_file': {'type': 'string'},
+            '_smart_source_lineno': {'type': 'integer'},
+        }
     prefer_number_vs_integer = table_spec.get('prefer_number_vs_integer', False)
     prefer_schema_as_string = table_spec.get('prefer_schema_as_string', False)
     data_schema = conversion.generate_schema(samples, prefer_number_vs_integer=prefer_number_vs_integer, prefer_schema_as_string=prefer_schema_as_string)
@@ -113,15 +117,20 @@ def sync(config, state, catalog):
             target_files = file_utils.get_matching_objects(table_spec, modified_since)
             max_records_per_run = table_spec.get('max_records_per_run', -1)
             records_streamed = 0
-            for t_file in target_files:
-                records_streamed += file_utils.write_file(t_file['key'], table_spec, merged_schema, max_records=max_records_per_run-records_streamed)
-                if 0 < max_records_per_run <= records_streamed:
-                    LOGGER.info(f'Processed the per-run limit of {records_streamed} records for stream "{stream.tap_stream_id}". Stopping sync for this stream.')
-                    break
-                state[stream.tap_stream_id] = {'modified_since': t_file['last_modified'].isoformat()}
-                singer.write_state(state)
 
-            LOGGER.info(f'Wrote {records_streamed} records for stream "{stream.tap_stream_id}".')
+            should_output_batch = table_spec.get('batch', False)
+            if should_output_batch:
+                process_batch(stream, target_files, table_spec, config, state)
+            else:
+                for t_file in target_files:
+                    records_streamed += file_utils.write_file(t_file['key'], table_spec, merged_schema, max_records=max_records_per_run-records_streamed)
+                    if 0 < max_records_per_run <= records_streamed:
+                        LOGGER.info(f'Processed the per-run limit of {records_streamed} records for stream "{stream.tap_stream_id}". Stopping sync for this stream.')
+                        break
+                    state[stream.tap_stream_id] = {'modified_since': t_file['last_modified'].isoformat()}
+                    singer.write_state(state)
+
+                LOGGER.info(f'Wrote {records_streamed} records for stream "{stream.tap_stream_id}".')
         else:
             LOGGER.warn(f'Skipping processing for stream [{stream.tap_stream_id}] without a config block.')
     return
