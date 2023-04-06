@@ -7,7 +7,6 @@ import dateutil
 import requests
 import singer
 import boto3
-from google.cloud import storage
 import os, logging
 from os import walk
 import tap_spreadsheets_anywhere.format_handler
@@ -270,6 +269,7 @@ def list_files_in_local_bucket(bucket, search_prefix=None):
             filename in local_filenames if os.path.exists(os.path.join(path, filename))]
 
 def list_files_in_gs_bucket(bucket, search_prefix=None):
+    from google.cloud import storage
     gs_client = storage.Client()
         
     blobs = gs_client.list_blobs(bucket, prefix=search_prefix)
