@@ -102,6 +102,7 @@ Each object in the 'tables' array describes one or more CSV or Excel spreadsheet
 - **invalid_format_action**: (optional) By default, the tap will raise an exception if a source file can not be read
 . Set this key to "ignore" to skip such source files and continue the run.  
 - **field_names**: (optional) An array holding the names of the columns in the targeted files. If not supplied, the first row of each file must hold the desired values. 
+- **encoding**: (optional) The file encoding to use when reading text files (i.e., "utf-8" (default), "latin1", "windows-1252")
 - **universal_newlines**: (optional) Should the source file parsers honor [universal newlines](https://docs.python.org/2.3/whatsnew/node7.html)). Setting this to false will instruct the parser to only consider '\n' as a valid newline identifier.
 - **skip_initial**: (optional) How many lines should be skipped. The default is 0.
 - **sample_rate**: (optional) The sampling rate to apply when reading a source file for sampling in discovery mode. A sampling rate of 1 will sample every line.  A sampling rate of 10 (the default) will sample every 10th line.
