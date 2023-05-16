@@ -2,6 +2,7 @@ import codecs
 import json
 import logging
 import unittest
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
@@ -239,35 +240,31 @@ class TestFormatHandlerExcelXlsxSkipInitial:
                 continue
 
     def test_bad_blank_line_above_headings_skip_initial_over_bad_row(self):
-        """Test to verify a sample file that raises #52.
-        Iteratting through this bad sample file will currently fail
-        when parsing the blank line during sampling time, even when
-        supplied with the: `skip_interval` argument with a row
-        beyond the bad row.
+        """Test to verify a sample file that raises #52, does not fail when
+        using: `skip_interval`, to avoid the bad row.
         """
-        exp = [
-            "Date",
-            "Contact",
-            "Description",
-            "Invoice Number",
-            "Reference",
-            "Debit (GBP)",
-            "Credit (GBP)",
-            "Gross (GBP)",
-            "Net (GBP)",
-            "VAT (GBP)",
-            "Account Code",
-            "Account",
-            "Account Type",
-            "Revenue Type",
-        ]
-        table_spec = {"format": "excel", "skip_initial": 5}
-        # NOTE: `get_row_iterator` fails with Issue #52. This is because the
-        # current code parses each line against the header generated from the
-        # first row of the file. With the above bad file, this throws an
-        # `IndexError` during the sampling discovery phase. Skipping rows
-        # should be done in: `excel_handler.generator_wrapper`, before the rows
-        # are parsed.
+        # NOTE: that `get_row_iterator` will compress the header row and each
+        # subsequent data row together, so count one less row than in the file
+        # + expect a dict.
+        exp = {
+           'account': 'Sales - Commission Fees',
+           'account_code': 9999.0,
+           'account_type': 'Revenue',
+           'contact': 'Company A Limited',
+           'credit_gbp': 123.45,
+           'date': datetime(2023, 1, 31, 0, 0),
+           'debit_gbp': 0.0,
+           'description': 'Description for Company A',
+           'gross_gbp': 123.45,
+           'invoice_number': 'INV-1234',
+           'net_gbp': 1234.45,
+           'reference': 'REF-1234',
+           'revenue_type': 'Commission Fees',
+           'vat_gbp': 0.0,
+        }
+        table_spec = {"format": "excel", "skip_initial": 4}
+        # NOTE: `get_row_iterator` should no longer fail with Issue #52, now
+        # that: `excel_handler.generator_wrapper` is not parsing skipped rows.
         iterator = get_row_iterator(table_spec, self.uri)
         # Assert that the expected row, after skipping, is next.
         assert next(iterator) == exp
