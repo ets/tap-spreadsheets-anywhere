@@ -237,3 +237,37 @@ class TestFormatHandlerExcelXlsxSkipInitial:
         with pytest.raises(IndexError):
             for _ in iterator:
                 continue
+
+    def test_bad_blank_line_above_headings_skip_initial_over_bad_row(self):
+        """Test to verify a sample file that raises #52.
+        Iteratting through this bad sample file will currently fail
+        when parsing the blank line during sampling time, even when
+        supplied with the: `skip_interval` argument with a row
+        beyond the bad row.
+        """
+        exp = [
+            "Date",
+            "Contact",
+            "Description",
+            "Invoice Number",
+            "Reference",
+            "Debit (GBP)",
+            "Credit (GBP)",
+            "Gross (GBP)",
+            "Net (GBP)",
+            "VAT (GBP)",
+            "Account Code",
+            "Account",
+            "Account Type",
+            "Revenue Type",
+        ]
+        table_spec = {"format": "excel", "skip_initial": 5}
+        # NOTE: `get_row_iterator` fails with Issue #52. This is because the
+        # current code parses each line against the header generated from the
+        # first row of the file. With the above bad file, this throws an
+        # `IndexError` during the sampling discovery phase. Skipping rows
+        # should be done in: `excel_handler.generator_wrapper`, before the rows
+        # are parsed.
+        iterator = get_row_iterator(table_spec, self.uri)
+        # Assert that the expected row, after skipping, is next.
+        assert next(iterator) == exp
