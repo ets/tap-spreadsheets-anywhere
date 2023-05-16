@@ -5,11 +5,13 @@ import unittest
 from unittest.mock import patch
 
 import dateutil
+import pytest
 import smart_open
 from six import StringIO
 
 from tap_spreadsheets_anywhere import configuration, file_utils, csv_handler, json_handler, generate_schema
 from tap_spreadsheets_anywhere.format_handler import monkey_patch_streamreader, get_row_iterator
+from tap_spreadsheets_anywhere.test.test_excel_handler import get_worksheet
 
 
 LOGGER = logging.getLogger(__name__)
@@ -204,3 +206,19 @@ class TestFormatHandler(unittest.TestCase):
 
         row = next(iterator)
         self.assertTrue(len(row)>1,"Not able to read a row.")
+
+
+class TestFormatHandlerExcelXlsxSkipInitial:
+    """pytests to validate Skip Initial for Excel `.xlsx` files works as expected."""
+    def test_validate_iterator(self, tmpdir):
+        xlsx = tmpdir / "fake_test.xlsx"
+        uri = f"file://{xlsx}"
+        _, workbook, _, exp = get_worksheet()
+        workbook.save(xlsx)
+
+        iterator = get_row_iterator({"format": "excel"}, uri)
+        assert next(iterator) == exp[0]
+        assert next(iterator) == exp[1]
+        assert next(iterator) == exp[2]
+        with pytest.raises(StopIteration):
+            next(iterator)
