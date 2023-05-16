@@ -171,7 +171,9 @@ def get_row_iterator(table_spec, uri):
     except (ValueError,TypeError) as err:
         raise InvalidFormatError(uri,message=err)
 
-    for _ in range(skip_initial):
-        next(iterator)
+    if format != 'excel':
+        # Reduce the scope of changes to fix Issue #52.
+        for _ in range(skip_initial):
+            next(iterator)
 
     return iterator
