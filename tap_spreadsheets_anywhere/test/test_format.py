@@ -2,6 +2,7 @@ import codecs
 import json
 import logging
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 import dateutil
@@ -210,6 +211,9 @@ class TestFormatHandler(unittest.TestCase):
 
 class TestFormatHandlerExcelXlsxSkipInitial:
     """pytests to validate Skip Initial for Excel `.xlsx` files works as expected."""
+    bad_file = Path(__file__).cwd() / "sample_with_bad_blank_line_above_headings.xlsx"
+    uri = f"file://{bad_file.absolute()}"
+
     def test_validate_iterator(self, tmpdir):
         xlsx = tmpdir / "fake_test.xlsx"
         uri = f"file://{xlsx}"
@@ -222,3 +226,14 @@ class TestFormatHandlerExcelXlsxSkipInitial:
         assert next(iterator) == exp[2]
         with pytest.raises(StopIteration):
             next(iterator)
+
+    def test_bad_blank_line_above_headings_raises(self):
+        """Test to verify a sample file that raises #52.
+        Iteratting through this bad sample file will currently fail
+        when parsing the blank line.
+        """
+        table_spec = {"format": "excel"}
+        iterator = get_row_iterator(table_spec, self.uri)
+        with pytest.raises(IndexError):
+            for _ in iterator:
+                continue
