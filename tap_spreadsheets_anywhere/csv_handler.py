@@ -4,6 +4,9 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 
+import sys
+csv.field_size_limit(sys.maxsize)
+
 def generator_wrapper(reader):
     for row in reader:
         to_return = {}
