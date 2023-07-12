@@ -31,6 +31,24 @@ def resolve_target_uri(table_spec, target_filename):
     else:
         return table_spec['path'] + "/" + target_filename
 
+def write_record(stream_name, record, time_extracted=None, version=None):
+    try:
+        if version:
+            singer.messages.write_message(
+                singer.messages.RecordMessage(
+                    stream=stream_name,
+                    record=record,
+                    version=version,
+                    time_extracted=time_extracted))
+        else:
+            singer.messages.write_record(
+                stream_name=stream_name,
+                record=record,
+                time_extracted=time_extracted)
+    except OSError as err:
+        LOGGER.info('OS Error writing record for: {}'.format(stream_name))
+        LOGGER.info('record: {}'.format(record))
+        raise err
 
 def _hide_credentials(path):
     import re
@@ -41,7 +59,7 @@ def _hide_credentials(path):
     return path
 
 
-def write_file(target_filename, table_spec, schema, max_records=-1):
+def write_file(target_filename, table_spec, schema, max_records=-1, version=None):
     LOGGER.info('Syncing file "{}".'.format(target_filename))
     target_uri = resolve_target_uri(table_spec, target_filename)
     records_synced = 0
@@ -57,7 +75,7 @@ def write_file(target_filename, table_spec, schema, max_records=-1):
 
             try:
                 record_with_meta = {**conversion.convert_row(row, schema), **metadata}
-                singer.write_record(table_spec['name'], record_with_meta)
+                write_record(table_spec['name'], record_with_meta, version=version)
             except BrokenPipeError as bpe:
                 LOGGER.error(
                     f'Pipe to loader broke after {records_synced} records were written from {target_filename}: troubled '
@@ -363,6 +381,7 @@ def config_by_crawl(crawl_config):
                         "max_sampling_read": source.get('max_sampling_read', 1000),
                         "universal_newlines": source.get('universal_newlines', True),
                         "prefer_number_vs_integer": source.get('prefer_number_vs_integer', False),
+                        "full_table_replace": source.get('full_table_replace', False),
                         "prefer_schema_as_string": source.get('prefer_schema_as_string', False),
                         "start_date": modified_since.isoformat()
                     }
