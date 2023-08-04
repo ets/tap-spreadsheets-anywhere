@@ -71,6 +71,13 @@ def convert(datum, desired_type=None):
         except (ValueError, TypeError):
             pass
 
+    if desired_type == 'boolean':
+        try:
+            datum_bool = bool(datum)
+            return datum_bool, 'boolean',
+        except (ValueError, TypeError):
+            pass
+
     return str(datum), 'string',
 
 
