@@ -41,8 +41,11 @@ def get_table_schema(table_spec):
         'decimal': {'type': ['null', 'number']},
     }
 
+        #   need to apply this in the case that the field is a primary key, this is not permitted to be null.
+    id_type = {'type': ['string']}
+
     entity_schema = {
-        e['name']: mapping[e['dataType']]
+        e['name'].lower(): id_type if e['name'].lower() == 'id' else mapping[e['dataType']]
         for e in entity_schema
     }
 
@@ -52,4 +55,4 @@ def get_table_headers(table_spec):
     _, bucket = parse_path(table_spec['path'])
     model_json = get_model_json(bucket)
     entity_schema = model_json[table_spec['name']]
-    return [e['name'] for e in entity_schema]
+    return [e['name'].lower() for e in entity_schema]

@@ -41,9 +41,12 @@ def merge_dicts(first, second):
 
 
 def override_schema_with_config(inferred_schema, table_spec):
-    schema_from_json = get_table_schema(table_spec)
+    try:  # normal table defined in model.json
+        schema = get_table_schema(table_spec)
+    except KeyError:
+        schema = table_spec.get('schema_overrides', {})
     override_schema = {
-        'properties': schema_from_json,
+        'properties': schema,
         'selected': table_spec.get('selected', True)
     }
     # Note that we directly support setting selected through config so that this tap is useful outside Meltano

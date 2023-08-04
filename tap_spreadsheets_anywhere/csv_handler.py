@@ -28,7 +28,10 @@ def generator_wrapper(reader):
 
 
 def get_row_iterator(table_spec, reader):
-    field_names = get_table_headers(table_spec)
+    try:  #  normal table in model.json
+        field_names = get_table_headers(table_spec)
+    except KeyError:  
+        field_names = [k.lower() for k in table_spec['schema_overrides'].keys()]
     # field_names = None
     # if 'field_names' in table_spec:
     #     field_names = table_spec['field_names']
