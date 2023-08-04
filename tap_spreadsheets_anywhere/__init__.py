@@ -2,6 +2,9 @@
 import os
 import logging
 import time
+from functools import lru_cache
+import io
+import json
 
 import dateutil
 import singer
@@ -12,6 +15,9 @@ from singer.schema import Schema
 from tap_spreadsheets_anywhere.configuration import Config
 import tap_spreadsheets_anywhere.conversion as conversion
 import tap_spreadsheets_anywhere.file_utils as file_utils
+from tap_spreadsheets_anywhere.model_json import get_table_schema
+
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -35,13 +41,16 @@ def merge_dicts(first, second):
 
 
 def override_schema_with_config(inferred_schema, table_spec):
-    override_schema = {'properties': table_spec.get('schema_overrides', {}),
-                       'selected': table_spec.get('selected', True)}
+    schema_from_json = get_table_schema(table_spec)
+    override_schema = {
+        'properties': schema_from_json,
+        'selected': table_spec.get('selected', True)
+    }
     # Note that we directly support setting selected through config so that this tap is useful outside Meltano
     return merge_dicts(inferred_schema, override_schema)
 
 
-def generate_schema(table_spec, samples):
+def generate_schema(table_spec):
     metadata_schema = {
         '_smart_source_bucket': {'type': 'string'},
         '_smart_source_file': {'type': 'string'},
@@ -49,10 +58,10 @@ def generate_schema(table_spec, samples):
     }
     prefer_number_vs_integer = table_spec.get('prefer_number_vs_integer', False)
     prefer_schema_as_string = table_spec.get('prefer_schema_as_string', False)
-    data_schema = conversion.generate_schema(samples, prefer_number_vs_integer=prefer_number_vs_integer, prefer_schema_as_string=prefer_schema_as_string)
+    # data_schema = conversion.generate_schema(samples, prefer_number_vs_integer=prefer_number_vs_integer, prefer_schema_as_string=prefer_schema_as_string)
     inferred_schema = {
         'type': 'object',
-        'properties': merge_dicts(data_schema, metadata_schema)
+        'properties': merge_dicts({}, metadata_schema)
     }
 
     merged_schema = override_schema_with_config(inferred_schema, table_spec)
@@ -67,9 +76,9 @@ def discover(config):
             sample_rate = table_spec.get('sample_rate',5)
             max_sampling_read = table_spec.get('max_sampling_read', 1000)
             max_sampled_files = table_spec.get('max_sampled_files', 50)
-            samples = file_utils.sample_files(table_spec, target_files,sample_rate=sample_rate,
-                                              max_records=max_sampling_read, max_files=max_sampled_files)
-            schema = generate_schema(table_spec, samples)
+            # samples = file_utils.sample_files(table_spec, target_files,sample_rate=sample_rate,
+            #                                   max_records=max_sampling_read, max_files=max_sampled_files)
+            schema = generate_schema(table_spec)
             stream_metadata = []
             key_properties = table_spec.get('key_properties', [])
             streams.append(

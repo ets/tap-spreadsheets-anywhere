@@ -7,7 +7,7 @@ import dateutil
 import requests
 import singer
 import boto3
-from google.cloud import storage
+# from google.cloud import storage
 import os, logging
 from os import walk
 import tap_spreadsheets_anywhere.format_handler
@@ -307,7 +307,6 @@ def list_files_in_azure_bucket(container_name, search_prefix=None):
     container_client = blob_service_client.get_container_client(container_name)
     blob_iterator = container_client.list_blobs(name_starts_with=search_prefix)
     return [{'Key': blob.name, 'LastModified': blob.last_modified} for blob in blob_iterator if blob.size > 0]
-
 
 
 def list_files_in_s3_bucket(bucket, search_prefix=None):

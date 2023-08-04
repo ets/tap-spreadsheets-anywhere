@@ -1,0 +1,43 @@
+{
+    // launch.json
+    "version": "0.2.0",
+    "configurations": [
+      
+      {
+        "name": "test",
+        "type": "python",
+        "request": "launch",
+        "module": "tap_spreadsheets_anywhere.__main__",
+        "args": ["--config", ".secrets/config.json"],
+        "python": "${command:python.interpreterPath}",
+        // Set to true to debug third-party library code
+        "justMyCode": false,
+        "env": { "PYTHONPATH": "${workspaceRoot}"},
+        "envFile": "${workspaceFolder}/.env",
+      },
+      {
+        "name": "test w/state",
+        "type": "python",
+        "request": "launch",
+        "module": "tap_spreadsheets_anywhere.__main__",
+        "args": ["--config", ".secrets/config.json", "--test", "--state", ".secrets/state.json",],
+        "python": "${command:python.interpreterPath}",
+        // Set to true to debug third-party library code
+        "justMyCode": false,
+        "env": { "PYTHONPATH": "${workspaceRoot}"},
+        "envFile": "${workspaceFolder}/.env",
+      },
+      {
+        "name": "full",
+        "type": "python",
+        "request": "launch",
+        "module": "tap_spreadsheets_anywhere.__main__",
+        "args": ["--config", ".secrets/config.json",],
+        "python": "${command:python.interpreterPath}",
+        // Set to true to debug third-party library code
+        "justMyCode": false,
+        "env": { "PYTHONPATH": "${workspaceRoot}"},
+        "envFile": "${workspaceFolder}/.env",
+      }
+    ]
+  }

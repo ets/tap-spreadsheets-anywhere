@@ -7,6 +7,8 @@ LOGGER = logging.getLogger(__name__)
 import sys
 csv.field_size_limit(sys.maxsize)
 
+from tap_spreadsheets_anywhere.model_json import get_table_headers
+
 def generator_wrapper(reader):
     for row in reader:
         to_return = {}
@@ -26,9 +28,10 @@ def generator_wrapper(reader):
 
 
 def get_row_iterator(table_spec, reader):
-    field_names = None
-    if 'field_names' in table_spec:
-        field_names = table_spec['field_names']
+    field_names = get_table_headers(table_spec)
+    # field_names = None
+    # if 'field_names' in table_spec:
+    #     field_names = table_spec['field_names']
 
     dialect = 'excel'
     if 'delimiter' not in table_spec or table_spec['delimiter'] == 'detect':
