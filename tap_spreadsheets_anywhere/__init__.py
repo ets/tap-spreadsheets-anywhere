@@ -74,13 +74,16 @@ def discover(config):
     streams = []
     for table_spec in config['tables']:
         try:
-            modified_since = dateutil.parser.parse(table_spec['start_date'])
-            target_files = file_utils.get_matching_objects(table_spec, modified_since)
-            sample_rate = table_spec.get('sample_rate',5)
-            max_sampling_read = table_spec.get('max_sampling_read', 1000)
-            max_sampled_files = table_spec.get('max_sampled_files', 50)
+            
+            # modified_since = dateutil.parser.parse(table_spec['start_date'])
+            # target_files = file_utils.get_matching_objects(table_spec, modified_since)
+            # sample_rate = table_spec.get('sample_rate',5)
+            # max_sampling_read = table_spec.get('max_sampling_read', 1000)
+            # max_sampled_files = table_spec.get('max_sampled_files', 50)
             # samples = file_utils.sample_files(table_spec, target_files,sample_rate=sample_rate,
             #                                   max_records=max_sampling_read, max_files=max_sampled_files)
+
+            table_spec['path'] = config['path']
             schema = generate_schema(table_spec)
             stream_metadata = []
             key_properties = table_spec.get('key_properties', [])
@@ -146,7 +149,8 @@ def sync(config, state, catalog):
             if not full_table_replace:
                 
                 modified_since = dateutil.parser.parse(
-                state.get(stream.tap_stream_id, {}).get('modified_since') or table_spec['start_date'])
+                state.get(stream.tap_stream_id, {}).get('modified_since') or "2017-05-01T00:00:00Z")
+            table_spec['path'] = config['path']  # inject top level path into table_spec
             target_files = file_utils.get_matching_objects(table_spec, None if full_table_replace else modified_since)
             max_records_per_run = table_spec.get('max_records_per_run', -1)
             records_streamed = 0

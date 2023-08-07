@@ -6,6 +6,13 @@ from functools import lru_cache
 
 from azure.storage.blob import BlobServiceClient
 
+optionset_names = {
+    'GlobalOptionsetMetadata',
+    'OptionsetMetadata',
+    'StatusMetadata',
+    'StateMetadata',
+}
+
 def parse_path(path):
     path_parts = path.split('://', 1)
     return ('local', path_parts[0]) if len(path_parts) <= 1 else (path_parts[0], path_parts[1])
@@ -20,14 +27,34 @@ def _get_json_from_azure(container_name):
     data = json.loads(data.read().decode('utf-8'))
     return data
 
-def get_model_json(container_name) -> dict:
+def get_attribute_json(container_name) -> dict:
     data = _get_json_from_azure(container_name)
     return {e['name']: e['attributes'] for e in data['entities']}
+
+def get_annotations_json(container_name) -> dict:
+    data = _get_json_from_azure(container_name)
+    return {e['name']: e['annotations'] for e in data['entities']}
+
+
+def get_file_pattern(table_spec: dict):
+    table_name = table_spec['name']
+    _, bucket = parse_path(table_spec['path'])
+    if table_name in optionset_names:
+        regex = f"^OptionsetMetadata/{table_name}.csv$"
+    else:
+        annotations = get_annotations_json(bucket)[table_name]
+        [partitioning_type] = [v['value'] for v in annotations if v['name'] == 'Athena:PartitionGranularity']
+        if partitioning_type == 'Month':
+            regex =  f'^{table_name}/[0-9]' + '{1}.*.csv$'  # e.g. "^team/[0-9]{1}.*.csv$"
+        elif partitioning_type == 'Year':
+            regex =  f'^{table_name}/[0-9]' + '{1}.*.csv$'  # e.g. "^team/[0-9]{1}.*.csv$"
+    return regex
+
 
 
 def get_table_schema(table_spec):
     _, bucket = parse_path(table_spec['path'])
-    model_json = get_model_json(bucket)
+    model_json = get_attribute_json(bucket)
     entity_schema = model_json[table_spec['name']]
 
     mapping = {
@@ -53,6 +80,6 @@ def get_table_schema(table_spec):
 
 def get_table_headers(table_spec):
     _, bucket = parse_path(table_spec['path'])
-    model_json = get_model_json(bucket)
+    model_json = get_attribute_json(bucket)
     entity_schema = model_json[table_spec['name']]
     return [e['name'].lower() for e in entity_schema]

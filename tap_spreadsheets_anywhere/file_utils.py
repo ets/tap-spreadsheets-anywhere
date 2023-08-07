@@ -15,6 +15,7 @@ import tap_spreadsheets_anywhere.conversion as conversion
 import smart_open.ssh as ssh_transport
 from azure.storage.blob import BlobServiceClient
 import smart_open.ftp as ftp_transport
+from tap_spreadsheets_anywhere.model_json import get_file_pattern, optionset_names
 
 LOGGER = logging.getLogger(__name__)
 
@@ -160,11 +161,15 @@ def get_matching_objects(table_spec, modified_since=None):
     elif protocol in ["http", "https"]:
         target_objects = convert_URL_to_file_list(table_spec)
     elif protocol in ["azure"]:
-        target_objects = list_files_in_azure_bucket(bucket,table_spec.get('search_prefix'))
+        name = table_spec['name']
+        search_prefix = 'OptionsetMetadata' if name in optionset_names else name
+        target_objects = list_files_in_azure_bucket(bucket,search_prefix)
     else:
         raise ValueError("Protocol {} not yet supported. Pull Requests are welcome!")
 
-    pattern = table_spec['pattern']
+    # pattern = table_spec['pattern']
+    # the optionsets provide regexes, but otherwise can be inferred from entity name and partitioning scheme
+    pattern = table_spec.get('pattern', get_file_pattern(table_spec))  
     matcher = re.compile(pattern)
     if modified_since:
         LOGGER.info(f'Checking {len(target_objects)} resolved objects for any that match regular expression "{pattern}" and were modified since {modified_since}')
@@ -342,7 +347,7 @@ def list_files_in_s3_bucket(bucket, search_prefix=None):
     return s3_objects
 
 
-def config_by_crawl(crawl_config):
+def config_by_crawl(crawl_config, bucket: str):
     config = {'tables': []}
     for source in crawl_config:
         entries = {}

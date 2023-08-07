@@ -6,22 +6,17 @@ from voluptuous import Schema, Required, Any, Optional
 LOGGER = logging.getLogger(__name__)
 
 CONFIG_CONTRACT = Schema({
+    Required('path'): str,
     Required('tables'): [{
-        Required('path'): str,
+        Optional('pattern'): str,
+        Optional('delimiter'): str,
         Required('name'): str,
-        Required('pattern'): str,
-        Required('start_date'): str,
         Required('key_properties'): [str],
-        Required('format'): Any('csv', 'excel', 'json', 'jsonl', 'detect'),
         Optional('encoding'): str,
         Optional('invalid_format_action'): Any('ignore','fail'),
         Optional('universal_newlines'): bool,
         Optional('skip_initial'): int,
-        Optional('selected'): bool,
-        Optional('field_names'): [str],
-        Optional('search_prefix'): str,
         Optional('worksheet_name'): str,
-        Optional('delimiter'): str,
         Optional('quotechar'): str,
         Optional('json_path'): str,
         Optional('sample_rate'): int,
