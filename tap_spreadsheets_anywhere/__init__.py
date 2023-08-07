@@ -84,6 +84,7 @@ def discover(config):
             #                                   max_records=max_sampling_read, max_files=max_sampled_files)
 
             table_spec['path'] = config['path']
+            table_spec['delimiter'] = ','
             schema = generate_schema(table_spec)
             stream_metadata = []
             key_properties = table_spec.get('key_properties', [])
