@@ -7,6 +7,7 @@ LOGGER = logging.getLogger(__name__)
 
 CONFIG_CONTRACT = Schema({
     Required('path'): str,
+    Required('format'): Any('csv', 'excel', 'json', 'jsonl', 'detect'),
     Required('tables'): [{
         Optional('pattern'): str,
         Optional('delimiter'): str,
