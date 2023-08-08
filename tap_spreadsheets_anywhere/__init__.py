@@ -206,12 +206,7 @@ def main():
         catalog.dump()
     # Otherwise run in sync mode
     else:
-        if args.catalog:
-            catalog = args.catalog
-            LOGGER.info(f"Using supplied catalog {args.catalog_path}.")
-        else:
-            LOGGER.info(f"Generating catalog through sampling.")
-            catalog = discover(tables_config)
+        catalog = discover(tables_config)
         if LOGGER.isEnabledFor(logging.DEBUG):
             LOGGER.debug(f"Catalog has streams: {catalog.to_dict()}")
         sync(tables_config, args.state, catalog)
