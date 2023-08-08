@@ -8,9 +8,11 @@ LOGGER = logging.getLogger(__name__)
 CONFIG_CONTRACT = Schema({
     Required('path'): str,
     Required('format'): Any('csv', 'excel', 'json', 'jsonl', 'detect'),
+    Required('start_date'): str,
+    Required('delimiter'): str,
     Required('tables'): [{
         Optional('pattern'): str,
-        Optional('delimiter'): str,
+        # Optional('delimiter'): str,
         Required('name'): str,
         Required('key_properties'): [str],
         Optional('encoding'): str,
@@ -27,6 +29,7 @@ CONFIG_CONTRACT = Schema({
         Optional('prefer_number_vs_integer'): bool,
         Optional('full_table_replace'): bool,
         Optional('prefer_schema_as_string'): bool,
+        Optional('search_prefix'): str,
         Optional('schema_overrides'): {
             str: {
                 Required('type'): Any(Any('null','string','integer','number','date-time'),

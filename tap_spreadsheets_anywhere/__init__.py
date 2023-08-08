@@ -77,8 +77,9 @@ def discover(config):
             table_spec['start_date'] = config['start_date']
             table_spec['path'] = config['path']
             table_spec['format'] = config['format']
+            table_spec['delimiter'] = config['delimiter']
 
-            modified_since = dateutil.parser.parse(table_spec['start_date'])
+            # modified_since = dateutil.parser.parse(table_spec['start_date'])
             # target_files = file_utils.get_matching_objects(table_spec, modified_since)
             # sample_rate = table_spec.get('sample_rate',5)
             # max_sampling_read = table_spec.get('max_sampling_read', 1000)

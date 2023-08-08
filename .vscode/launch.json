@@ -8,7 +8,7 @@
         "type": "python",
         "request": "launch",
         "module": "tap_spreadsheets_anywhere.__main__",
-        "args": ["--config", ".secrets/config.json"],
+        "args": ["--config", ".secrets/config.json", ">", "output.json"],
         "python": "${command:python.interpreterPath}",
         // Set to true to debug third-party library code
         "justMyCode": false,

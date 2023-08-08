@@ -6,6 +6,13 @@ from functools import lru_cache
 
 from azure.storage.blob import BlobServiceClient
 
+optionset_names = {
+    'GlobalOptionsetMetadata',
+    'OptionsetMetadata',
+    'StatusMetadata',
+    'StateMetadata',
+}
+
 def parse_path(path):
     path_parts = path.split('://', 1)
     return ('local', path_parts[0]) if len(path_parts) <= 1 else (path_parts[0], path_parts[1])

@@ -163,7 +163,7 @@ def get_matching_objects(table_spec, modified_since=None):
     elif protocol in ["azure"]:
         name = table_spec['name']
         search_prefix = 'OptionsetMetadata' if name in optionset_names else name
-        target_objects = list_files_in_azure_bucket(bucket,search_prefix)
+        target_objects = list_files_in_azure_bucket(bucket, search_prefix)
     else:
         raise ValueError("Protocol {} not yet supported. Pull Requests are welcome!")
 
