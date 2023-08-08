@@ -15,7 +15,7 @@ import tap_spreadsheets_anywhere.conversion as conversion
 import smart_open.ssh as ssh_transport
 from azure.storage.blob import BlobServiceClient
 import smart_open.ftp as ftp_transport
-from tap_spreadsheets_anywhere.model_json import optionset_names
+from tap_spreadsheets_anywhere.model_json import optionset_names, get_file_pattern
 
 LOGGER = logging.getLogger(__name__)
 
@@ -169,7 +169,7 @@ def get_matching_objects(table_spec, modified_since=None):
 
     # pattern = table_spec['pattern']
     # the optionsets provide regexes, but otherwise can be inferred from entity name and partitioning scheme
-    pattern = table_spec['pattern']
+    pattern = get_file_pattern(table_spec)
     matcher = re.compile(pattern)
     if modified_since:
         LOGGER.info(f'Checking {len(target_objects)} resolved objects for any that match regular expression "{pattern}" and were modified since {modified_since}')
