@@ -109,3 +109,5 @@ singer-check-tap-data
 state.json
 
 .secrets/
+
+output.json

@@ -74,7 +74,11 @@ def discover(config):
     streams = []
     for table_spec in config['tables']:
         try:
-            
+            table_spec['start_date'] = config['start_date']
+            table_spec['path'] = config['path']
+            table_spec['format'] = config['format']
+            table_spec['delimiter'] = config['delimiter']
+
             # modified_since = dateutil.parser.parse(table_spec['start_date'])
             # target_files = file_utils.get_matching_objects(table_spec, modified_since)
             # sample_rate = table_spec.get('sample_rate',5)
@@ -83,8 +87,6 @@ def discover(config):
             # samples = file_utils.sample_files(table_spec, target_files,sample_rate=sample_rate,
             #                                   max_records=max_sampling_read, max_files=max_sampled_files)
 
-            table_spec['path'] = config['path']
-            table_spec['delimiter'] = ','
             schema = generate_schema(table_spec)
             stream_metadata = []
             key_properties = table_spec.get('key_properties', [])
@@ -150,8 +152,7 @@ def sync(config, state, catalog):
             if not full_table_replace:
                 
                 modified_since = dateutil.parser.parse(
-                state.get(stream.tap_stream_id, {}).get('modified_since') or "2017-05-01T00:00:00Z")
-            table_spec['path'] = config['path']  # inject top level path into table_spec
+                state.get(stream.tap_stream_id, {}).get('modified_since') or table_spec['start_date'])
             target_files = file_utils.get_matching_objects(table_spec, None if full_table_replace else modified_since)
             max_records_per_run = table_spec.get('max_records_per_run', -1)
             records_streamed = 0
@@ -205,12 +206,7 @@ def main():
         catalog.dump()
     # Otherwise run in sync mode
     else:
-        if args.catalog:
-            catalog = args.catalog
-            LOGGER.info(f"Using supplied catalog {args.catalog_path}.")
-        else:
-            LOGGER.info(f"Generating catalog through sampling.")
-            catalog = discover(tables_config)
+        catalog = discover(tables_config)
         if LOGGER.isEnabledFor(logging.DEBUG):
             LOGGER.debug(f"Catalog has streams: {catalog.to_dict()}")
         sync(tables_config, args.state, catalog)
