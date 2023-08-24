@@ -1,3 +1,4 @@
+from collections import defaultdict
 import re
 
 import pytz
@@ -311,7 +312,22 @@ def list_files_in_azure_bucket(container_name, search_prefix=None):
     blob_service_client = BlobServiceClient.from_connection_string(sas_key)
     container_client = blob_service_client.get_container_client(container_name)
     blob_iterator = container_client.list_blobs(name_starts_with=search_prefix + '/')
-    return [{'Key': blob.name, 'LastModified': blob.last_modified} for blob in blob_iterator if blob.size > 0]
+    blobs = [{'Key': blob.name, 'LastModified': blob.last_modified} for blob in blob_iterator if blob.size > 0]
+    if search_prefix in optionset_names:
+        return blobs
+    else:
+        # get the latest snapshot for each partition, don't care about the earlier ones.
+        snapshot_blobs = [
+            k for k in blobs
+            if 'Snapshot' in k['Key']
+        ]
+        # use a dict to only keep the last relevant file for partition e.g. '2023-08' prefix, it will be the latest.
+        blob_dict = {
+            k['Key'].split('/')[-1].split('_')[0]: k
+            for k in snapshot_blobs
+        }
+        blobs = list(blob_dict.values())
+        return blobs
 
 
 def list_files_in_s3_bucket(bucket, search_prefix=None):
