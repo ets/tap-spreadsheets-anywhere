@@ -310,7 +310,7 @@ def list_files_in_azure_bucket(container_name, search_prefix=None):
     sas_key = os.environ['AZURE_STORAGE_CONNECTION_STRING']
     blob_service_client = BlobServiceClient.from_connection_string(sas_key)
     container_client = blob_service_client.get_container_client(container_name)
-    blob_iterator = container_client.list_blobs(name_starts_with=search_prefix)
+    blob_iterator = container_client.list_blobs(name_starts_with=search_prefix + '/')
     return [{'Key': blob.name, 'LastModified': blob.last_modified} for blob in blob_iterator if blob.size > 0]
 
 

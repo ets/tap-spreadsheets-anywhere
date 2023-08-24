@@ -68,16 +68,12 @@ def get_annotations_json(container_name) -> dict:
     data = _get_json_from_azure(container_name)
     return {e['name']: e['annotations'] for e in data['entities']}
 
-def get_file_pattern(table_spec: dict):
+def get_file_pattern(table_spec: dict) -> str:
+    """
+    Either return regex for the snapshot csv files, or the appropriate optionset path to csv files"""
     table_name = table_spec['name']
-    _, bucket = parse_path(table_spec['path'])
     if table_name in optionset_names:
         regex = f"^OptionsetMetadata/{table_name}.csv$"
     else:
-        annotations = get_annotations_json(bucket)[table_name]
-        [partitioning_type] = [v['value'] for v in annotations if v['name'] == 'Athena:PartitionGranularity']
-        if partitioning_type == 'Month':
-            regex =  f'^{table_name}/[0-9]' + '{1}.*.csv$'  # e.g. "^team/[0-9]{1}.*.csv$"
-        elif partitioning_type == 'Year':
-            regex =  f'^{table_name}/[0-9]' + '{1}.*.csv$'  # e.g. "^team/[0-9]{1}.*.csv$"
+        regex = f'^{table_name}\/Snapshot\/.*.csv$'
     return regex
