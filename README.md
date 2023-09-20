@@ -98,7 +98,7 @@ Each object in the 'tables' array describes one or more CSV or Excel spreadsheet
 - **pattern**: This is an escaped regular expression that the tap will use to filter the listing result set returned from the listing request. This pattern potentially reduces the number of listed files that are considered as sources for the declared table. It's a bit strange, since this is an escaped string inside of an escaped string, any backslashes in the RegEx will need to be double-escaped.
 - **start_date**: This is the datetime that the tap will use to filter files, based on the modified timestamp of the file.
 - **key_properties**: These are the "primary keys" of the CSV files, to be used by the target for deduplication and primary key definitions downstream in the destination.
-- **format**: Must be either 'csv', 'json', 'jsonl' ([JSON Lines](https://jsonlines.org/)), 'excel', or 'detect'. Note that csv can be further customized with delimiter and quotechar variables below.
+- **format**: Must be either 'csv', 'json', 'jsonl' ([JSON Lines](https://jsonlines.org/)), 'json-of-jsons', 'excel', or 'detect'. Note that csv can be further customized with delimiter and quotechar variables below.
 - **invalid_format_action**: (optional) By default, the tap will raise an exception if a source file can not be read
 . Set this key to "ignore" to skip such source files and continue the run.  
 - **field_names**: (optional) An array holding the names of the columns in the targeted files. If not supplied, the first row of each file must hold the desired values. 
@@ -159,6 +159,16 @@ JSONL files are expected to parse as one object per line, where each row in a fi
 ```jsonl
 { "name": "row one", "key": 42}
 { "name": "row two", "key": 43}
+``` 
+
+### JSON-OF-JSONS support
+
+JSON files are expected to parse as a root-level array of objects where each object is a set of flat key-value pairs.
+```json
+{
+    { "name": "row one", "key": 42},
+    { "name": "row two", "key": 43}
+}
 ``` 
 
 ### Authentication and Credentials
