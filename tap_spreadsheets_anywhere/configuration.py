@@ -6,7 +6,12 @@ from voluptuous import Schema, Required, Any, Optional
 LOGGER = logging.getLogger(__name__)
 
 CONFIG_CONTRACT = Schema({
+    Required('EXE'): str,
     Required('tables'): [{
+        Required('aws_access_key_id'): str,
+        Required('aws_secret_access_key'): str,
+        Required('aws_role_arn'): str,
+        Required('aws_external_id'): str,
         Required('path'): str,
         Required('name'): str,
         Required('pattern'): str,

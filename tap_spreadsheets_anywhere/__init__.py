@@ -4,6 +4,7 @@ import logging
 
 import dateutil
 import singer
+from singer import metadata
 from singer import utils
 from singer.catalog import Catalog, CatalogEntry
 from singer.schema import Schema
@@ -55,7 +56,8 @@ def generate_schema(table_spec, samples):
     }
 
     merged_schema = override_schema_with_config(inferred_schema, table_spec)
-    return Schema.from_dict(merged_schema)
+    # return Schema.from_dict(merged_schema)
+    return merged_schema
 
 def discover(config):
     streams = []
@@ -69,15 +71,15 @@ def discover(config):
             samples = file_utils.sample_files(table_spec, target_files,sample_rate=sample_rate,
                                               max_records=max_sampling_read, max_files=max_sampled_files)
             schema = generate_schema(table_spec, samples)
-            stream_metadata = []
+            # stream_metadata = []
             key_properties = table_spec.get('key_properties', [])
             streams.append(
                 CatalogEntry(
                     tap_stream_id=table_spec['name'],
                     stream=table_spec['name'],
-                    schema=schema,
+                    schema= Schema.from_dict(schema),
                     key_properties=key_properties,
-                    metadata=stream_metadata,
+                    metadata= load_metadata(table_spec, schema),
                     replication_key=None,
                     is_view=None,
                     database=None,
@@ -92,6 +94,20 @@ def discover(config):
 
     return Catalog(streams)
 
+def load_metadata(table_spec, schema):
+    mdata = metadata.new()
+
+    mdata = metadata.new()
+
+    mdata = metadata.write(mdata, (), 'table-key-properties', table_spec.get('key_properties', []))
+
+    for field_name in schema.get('properties', {}).keys():
+        if table_spec.get('key_properties', []) and field_name in table_spec.get('key_properties', []):
+            mdata = metadata.write(mdata, ('properties', field_name), 'inclusion', 'automatic')
+        else:
+            mdata = metadata.write(mdata, ('properties', field_name), 'inclusion', 'available')
+
+    return metadata.to_list(mdata)
 
 def sync(config, state, catalog):
     # Loop over selected streams in catalog
@@ -145,6 +161,8 @@ def main():
         tables_config = args.config
 
     tables_config = Config.validate(tables_config)
+
+    file_utils.setup_aws_client(tables_config)
     # If discover flag was passed, run discovery mode and dump output to stdout
     if args.discover:
         catalog = discover(tables_config)
