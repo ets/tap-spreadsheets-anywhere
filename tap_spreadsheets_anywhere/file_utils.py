@@ -7,13 +7,11 @@ import dateutil
 import requests
 import singer
 import boto3
-from google.cloud import storage
 import os, logging
 from os import walk
 import tap_spreadsheets_anywhere.format_handler
 import tap_spreadsheets_anywhere.conversion as conversion
 import smart_open.ssh as ssh_transport
-from azure.storage.blob import BlobServiceClient
 import smart_open.ftp as ftp_transport
 
 LOGGER = logging.getLogger(__name__)
@@ -134,12 +132,8 @@ def get_matching_objects(table_spec, modified_since=None):
         target_objects = list_files_in_SSH_bucket(table_spec['path'],table_spec.get('search_prefix'))
     elif protocol in ["ftp"]:
         target_objects = list_files_in_ftp_server(table_spec['path'],table_spec.get('search_prefix'))
-    elif protocol in ["gs"]:
-        target_objects = list_files_in_gs_bucket(bucket,table_spec.get('search_prefix'))
     elif protocol in ["http", "https"]:
         target_objects = convert_URL_to_file_list(table_spec)
-    elif protocol in ["azure"]:
-        target_objects = list_files_in_azure_bucket(bucket,table_spec.get('search_prefix'))
     else:
         raise ValueError("Protocol {} not yet supported. Pull Requests are welcome!")
 
@@ -269,23 +263,6 @@ def list_files_in_local_bucket(bucket, search_prefix=None):
     return [{'Key': filename, 'LastModified': datetime.fromtimestamp(os.path.getmtime(os.path.join(path, filename)), timezone.utc)} for
             filename in local_filenames if os.path.exists(os.path.join(path, filename))]
 
-def list_files_in_gs_bucket(bucket, search_prefix=None):
-    gs_client = storage.Client()
-        
-    blobs = gs_client.list_blobs(bucket, prefix=search_prefix)
-
-    target_objects = [{'Key': blob.name, 'LastModified': blob.updated} for blob in blobs]
-    
-    LOGGER.info("Found {} files.".format(len(target_objects)))
-
-    return target_objects
-
-def list_files_in_azure_bucket(container_name, search_prefix=None):
-    sas_key = os.environ['AZURE_STORAGE_CONNECTION_STRING']
-    blob_service_client = BlobServiceClient.from_connection_string(sas_key)
-    container_client = blob_service_client.get_container_client(container_name)
-    blob_iterator = container_client.list_blobs(name_starts_with=search_prefix)
-    return [{'Key': blob.name, 'LastModified': blob.last_modified} for blob in blob_iterator if blob.size > 0]
 
 def setup_aws_client(tables_config):
     """

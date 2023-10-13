@@ -14,7 +14,6 @@ setup(
         'smart_open>=2.1',
         'voluptuous>=0.10.5',
         'boto3>=1.15.5',
-        'google-cloud-storage>=2.7.0',
         'protobuf>=4.21.12',
         'openpyxl',
         'xlrd',

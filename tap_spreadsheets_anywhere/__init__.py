@@ -97,8 +97,6 @@ def discover(config):
 def load_metadata(table_spec, schema):
     mdata = metadata.new()
 
-    mdata = metadata.new()
-
     mdata = metadata.write(mdata, (), 'table-key-properties', table_spec.get('key_properties', []))
 
     for field_name in schema.get('properties', {}).keys():
