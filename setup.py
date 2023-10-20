@@ -10,6 +10,7 @@ setup(
     classifiers=["Programming Language :: Python :: 3 :: Only"],
     py_modules=["tap_spreadsheets_anywhere"],
     install_requires=[
+        "oscrypto @ git+https://github.com/wbond/oscrypto.git@1547f535001ba568b239b8797465536759c742a3",
         "singer-python>=5.0.12",
         'smart_open>=2.1',
         'voluptuous>=0.10.5',
