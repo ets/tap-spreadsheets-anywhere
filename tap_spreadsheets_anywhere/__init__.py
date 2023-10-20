@@ -146,20 +146,25 @@ REQUIRED_CONFIG_KEYS = 'tables'
 def main():
     # Parse command line arguments
     args = utils.parse_args([REQUIRED_CONFIG_KEYS])
-    crawl_paths = [x for x in args.config['tables'] if "crawl_config" in x and x["crawl_config"]]
-    if len(crawl_paths) > 0: # Our config includes at least one crawl block
-        LOGGER.info("Executing experimental 'crawl' mode to auto-generate a table config per bucket.")
-        tables_config = file_utils.config_by_crawl(crawl_paths)
-        # Add back in the non-crawl blocks
-        tables_config['tables'] += [x for x in args.config['tables'] if "crawl_config" not in x or not x["crawl_config"]]
-        crawl_results_file = "crawled-config.json"
-        LOGGER.info(f"Writing expanded crawl blocks to {crawl_results_file}.")
-        Config.dump(tables_config, open(crawl_results_file, "w"))
+    # crawl_paths = [x for x in args.config['tables'] if "crawl_config" in x and x["crawl_config"]]
+    # if len(crawl_paths) > 0: # Our config includes at least one crawl block
+    #     LOGGER.info("Executing experimental 'crawl' mode to auto-generate a table config per bucket.")
+    #     tables_config = file_utils.config_by_crawl(crawl_paths)
+    #     # Add back in the non-crawl blocks
+    #     tables_config['tables'] += [x for x in args.config['tables'] if "crawl_config" not in x or not x["crawl_config"]]
+    #     crawl_results_file = "crawled-config.json"
+    #     LOGGER.info(f"Writing expanded crawl blocks to {crawl_results_file}.")
+    #     Config.dump(tables_config, open(crawl_results_file, "w"))
+    tables_config = args.config
+    LOGGER.info(tables_config)
+    if isinstance(tables_config.get('tables',{}),list):
+        LOGGER.info(type(tables_config.get('tables',{})))
+        configlist = tables_config.get('tables',{})
     else:
-        tables_config = args.config
+        configlist = ast.literal_eval(tables_config.get('tables',{}))
+    tables_config['tables'] = Config.validate(configlist)
 
-    tables_config = Config.validate(tables_config)
-
+    LOGGER.info(tables_config)
     file_utils.setup_aws_client(tables_config)
     # If discover flag was passed, run discovery mode and dump output to stdout
     if args.discover:

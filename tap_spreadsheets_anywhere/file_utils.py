@@ -270,14 +270,13 @@ def setup_aws_client(tables_config):
     :param config: connection config
     """
     LOGGER.info("Attempting to create AWS session")
-    tables_config = tables_config['tables']
-    LOGGER.info(tables_config)
+    tables_config = tables_config
     # Get the required parameters from config file and/or environment variables
-    aws_access_key_id = tables_config[0].get('aws_access_key_id') or os.environ.get('AWS_ACCESS_KEY_ID')
-    aws_secret_access_key = tables_config[0].get('aws_secret_access_key') or os.environ.get('AWS_SECRET_ACCESS_KEY')
-    aws_session_token = tables_config[0].get('aws_session_token') or os.environ.get('AWS_SESSION_TOKEN')
-    aws_role_arn = tables_config[0].get('aws_role_arn') or os.environ.get('AWS_ROLE_ARN')
-    aws_external_id = tables_config[0].get('aws_external_id') or os.environ.get('AWS_EXTERNAL_ID')
+    aws_access_key_id = tables_config.get('aws_access_key_id') or os.environ.get('AWS_ACCESS_KEY_ID')
+    aws_secret_access_key = tables_config.get('aws_secret_access_key') or os.environ.get('AWS_SECRET_ACCESS_KEY')
+    aws_session_token = tables_config.get('aws_session_token') or os.environ.get('AWS_SESSION_TOKEN')
+    aws_role_arn = tables_config.get('aws_role_arn') or os.environ.get('AWS_ROLE_ARN')
+    aws_external_id = tables_config.get('aws_external_id') or os.environ.get('AWS_EXTERNAL_ID')
     # AWS credentials based authentication
     # Login as an IAM User
     if aws_access_key_id and aws_secret_access_key:

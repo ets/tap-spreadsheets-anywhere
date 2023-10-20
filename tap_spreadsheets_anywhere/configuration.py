@@ -5,19 +5,13 @@ import logging
 from voluptuous import Schema, Required, Any, Optional
 LOGGER = logging.getLogger(__name__)
 
-CONFIG_CONTRACT = Schema({
-    Required('EXE'): str,
-    Required('tables'): [{
-        Required('aws_access_key_id'): str,
-        Required('aws_secret_access_key'): str,
-        Required('aws_role_arn'): str,
+CONFIG_CONTRACT = Schema([{
         Required('path'): str,
         Required('name'): str,
         Required('pattern'): str,
         Required('start_date'): str,
         Required('key_properties'): [str],
         Required('format'): Any('csv', 'excel', 'json', 'jsonl', 'detect'),
-        Optional('aws_external_id'): str,
         Optional('encoding'): str,
         Optional('invalid_format_action'): Any('ignore','fail'),
         Optional('universal_newlines'): bool,
@@ -41,8 +35,7 @@ CONFIG_CONTRACT = Schema({
                                       [Any('null','string','integer','number','date-time')])
             }
         }
-    }]
-})
+    }])
 
 class Config():
 
