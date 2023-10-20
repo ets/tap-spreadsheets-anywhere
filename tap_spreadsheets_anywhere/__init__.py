@@ -4,6 +4,7 @@ import logging
 
 import dateutil
 import singer
+import ast
 from singer import metadata
 from singer import utils
 from singer.catalog import Catalog, CatalogEntry
@@ -156,7 +157,6 @@ def main():
     #     LOGGER.info(f"Writing expanded crawl blocks to {crawl_results_file}.")
     #     Config.dump(tables_config, open(crawl_results_file, "w"))
     tables_config = args.config
-    LOGGER.info(tables_config)
     if isinstance(tables_config.get('tables',{}),list):
         LOGGER.info(type(tables_config.get('tables',{})))
         configlist = tables_config.get('tables',{})
@@ -164,7 +164,6 @@ def main():
         configlist = ast.literal_eval(tables_config.get('tables',{}))
     tables_config['tables'] = Config.validate(configlist)
 
-    LOGGER.info(tables_config)
     file_utils.setup_aws_client(tables_config)
     # If discover flag was passed, run discovery mode and dump output to stdout
     if args.discover:
