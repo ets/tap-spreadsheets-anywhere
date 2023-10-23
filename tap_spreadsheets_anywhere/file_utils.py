@@ -312,7 +312,12 @@ def list_files_in_azure_bucket(container_name, search_prefix=None):
     blob_service_client = BlobServiceClient.from_connection_string(sas_key)
     container_client = blob_service_client.get_container_client(container_name)
     blob_iterator = container_client.list_blobs(name_starts_with=search_prefix + '/')
-    blobs = [{'Key': blob.name, 'LastModified': blob.last_modified} for blob in blob_iterator if blob.size > 0]
+    
+    # keep all blobs including 0-size
+    blobs = [
+        {'Key': blob.name, 'LastModified': blob.last_modified, 'Size': blob.size} 
+        for blob in blob_iterator
+    ]
     if search_prefix in optionset_names:
         return blobs
     else:
@@ -326,7 +331,12 @@ def list_files_in_azure_bucket(container_name, search_prefix=None):
             k['Key'].split('/')[-1].split('_')[0]: k
             for k in snapshot_blobs
         }
-        blobs = list(blob_dict.values())
+        # now drop any 0-size blobs. If the latest file in that date-partition is 0-size
+        # that means all rows in that partition have been deleted, nothing to emit.
+        blobs = [
+            blob for blob in blob_dict.values()
+            if blob['Size'] > 0
+        ]
         return blobs
 
 
