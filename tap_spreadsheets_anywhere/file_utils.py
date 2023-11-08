@@ -42,34 +42,39 @@ def write_file(target_filename, table_spec, schema, max_records=-1):
     LOGGER.info('Syncing file "{}".'.format(target_filename))
     target_uri = resolve_target_uri(table_spec, target_filename)
     records_synced = 0
-    try:
-        iterator = tap_spreadsheets_anywhere.format_handler.get_row_iterator(table_spec, target_uri)
-        for row in iterator:
-            metadata = {
-                '_smart_source_bucket': _hide_credentials(table_spec['path']),
-                '_smart_source_file': target_filename,
-                # index zero, +1 for header row
-                '_smart_source_lineno': records_synced + 2
-            }
+    modified_since = dateutil.parser.parse(table_spec.get('start_date'))
+    if evaluate_row_level_date_criteria(target_filename, table_spec, modified_since):
+        try:
+            iterator = tap_spreadsheets_anywhere.format_handler.get_row_iterator(table_spec, target_uri)
+            for row in iterator:
+                metadata = {
+                    '_smart_source_bucket': _hide_credentials(table_spec['path']),
+                    '_smart_source_file': target_filename,
+                    # index zero, +1 for header row
+                    '_smart_source_lineno': records_synced + 2
+                }
 
-            try:
-                record_with_meta = {**conversion.convert_row(row, schema), **metadata}
-                singer.write_record(table_spec['name'], record_with_meta)
-            except BrokenPipeError as bpe:
-                LOGGER.error(
-                    f'Pipe to loader broke after {records_synced} records were written from {target_filename}: troubled '
-                    f'line was {record_with_meta}')
-                raise bpe
+                try:
+                    record_with_meta = {**conversion.convert_row(row, schema), **metadata}
+                    singer.write_record(table_spec['name'], record_with_meta)
+                except BrokenPipeError as bpe:
+                    LOGGER.error(
+                        f'Pipe to loader broke after {records_synced} records were written from {target_filename}: troubled '
+                        f'line was {record_with_meta}')
+                    raise bpe
 
-            records_synced += 1
-            if 0 < max_records <= records_synced:
-                break
+                records_synced += 1
+                if 0 < max_records <= records_synced:
+                    break
 
-    except tap_spreadsheets_anywhere.format_handler.InvalidFormatError as ife:
-        if table_spec.get('invalid_format_action','fail').lower() == "ignore":
-            LOGGER.exception(f"Ignoring unparseable file: {target_filename}",ife)
-        else:
-            raise ife
+        except tap_spreadsheets_anywhere.format_handler.InvalidFormatError as ife:
+            if table_spec.get('invalid_format_action','fail').lower() == "ignore":
+                LOGGER.exception(f"Ignoring unparseable file: {target_filename}",ife)
+            else:
+                raise ife
+
+    else:
+        LOGGER.info('File does not meet row level requirements "{}".'.format(target_filename))
 
     return records_synced
 
@@ -166,6 +171,53 @@ def get_matching_objects(table_spec, modified_since=None):
     if not LOGGER.isEnabledFor(logging.DEBUG):
         LOGGER.info(f'Processing {len(to_return)} resolved objects that met our criteria. Enable debug verbosity logging for more details.')
     return sorted(to_return, key=lambda item: item['last_modified'])
+
+def evaluate_row_level_date_criteria(target_file_name, table_spec, modified_since=None):
+    protocol, bucket = parse_path(table_spec['path'])
+
+    pattern = table_spec['pattern']
+    matcher = re.compile(pattern)
+
+    to_return = []
+            
+    s3 = boto3.client('s3')
+    
+    resp = s3.select_object_content(
+        Bucket=table_spec['path'].replace("s3://", ""),
+        Key=target_file_name,
+        ExpressionType='SQL',
+        Expression="SELECT CAST(_7 AS TIMESTAMP) as modified_date from s3object",
+        InputSerialization = {'CSV': {"FileHeaderInfo": "NONE"}, 'CompressionType': 'GZIP'},
+        OutputSerialization = {'CSV': {}},
+    )
+        
+    max_date_list = []
+    
+    for event in resp['Payload']:
+
+        if 'Records' in event:    
+            records = event['Records']['Payload'].decode('utf-8')
+            records_list = records.splitlines()
+            dates_list = [parse(date) for date in records_list if not date is None]             
+            max_date_list.append(max(dt for dt in dates_list))
+    latest_modified_record = max(dt for dt in max_date_list)
+    #latest_modified_record = max(dates_list)
+        
+            # noinspection PyTypeChecker
+    LOGGER.info(modified_since)
+    LOGGER.info(latest_modified_record)
+    if (modified_since is None or modified_since < latest_modified_record):
+        LOGGER.debug('Including key "{}"'.format(target_file_name))
+        LOGGER.debug('Last modified: {}'.format(latest_modified_record) + ' comparing to {} '.format(modified_since))
+        #to_return.append({'key': key, 'last_modified': latest_modified_record})
+        return True
+    else:
+        LOGGER.debug('Not including key "{}"'.format(target_file_name))
+
+    if not LOGGER.isEnabledFor(logging.DEBUG):
+        LOGGER.info(f'Processing {len(to_return)} resolved objects that met our criteria. Enable debug verbosity logging for more details.')
+    return sorted(to_return, key=lambda item: item['last_modified'])
+
 
 
 def list_files_in_SSH_bucket(uri, search_prefix=None):
