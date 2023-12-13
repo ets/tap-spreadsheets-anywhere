@@ -1,0 +1,6 @@
+{"id": 1, "value": {"string": "foo"}}
+{"id": 2, "value": {"integer": 42}}
+{"id": 3, "value": {"float": 42.42}}
+{"id": 4, "value": {"boolean": true}}
+{"id": 5, "value": {"nested-array": [1, 2, 3]}}
+{"id": 6, "value": {"nested-object": {"foo": "bar"}}}

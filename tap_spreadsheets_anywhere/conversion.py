@@ -26,8 +26,9 @@ def coerce(datum,declared_types):
     if datum is None or datum == '':
         return None
 
-    desired_type = declared_types.copy()
-    if isinstance(desired_type, list):
+    desired_type = declared_types
+    if isinstance(declared_types, list):
+        desired_type = declared_types.copy()
         if "null" in desired_type:
             desired_type.remove("null")
         desired_type = desired_type[0]
@@ -42,6 +43,15 @@ def convert(datum, desired_type=None):
     """
     if datum is None or str(datum).strip() == '':
         return None, None,
+
+    if isinstance(datum, bool) or desired_type == 'boolean':
+        return datum, 'boolean',
+
+    if isinstance(datum, list) or desired_type == 'array':
+        return datum, 'array',
+
+    if isinstance(datum, dict) or desired_type == 'object':
+        return datum, 'object',
 
     if desired_type in (None, 'integer'):
         try:
@@ -117,6 +127,12 @@ def pick_datatype(counts,prefer_number_vs_integer=False):
             to_return = 'number'
         elif counts.get('date-time', 0) > 0:
             to_return = 'date-time'
+        elif counts.get('boolean', 0) > 0:
+            to_return = 'boolean'
+        elif counts.get('array', 0) > 0:
+            to_return = 'array'
+        elif counts.get('object', 0) > 0:
+            to_return = 'object'
         elif counts.get('string', 0) <= 0:
             LOGGER.warning(f"Unexpected data type encountered in histogram {counts}. Defaulting type to String.")
 
@@ -148,6 +164,21 @@ def generate_schema(samples,prefer_number_vs_integer=False, prefer_schema_as_str
                 to_return[key] = {
                     'type': ['null', 'string'],
                     'format': 'date-time',
+                }
+            elif datatype == 'array':
+                # TODO: This currently only uses the first record.
+                #       Extend that by sampling more values.
+                if samples[0][key]:
+                    _, inner_type = convert(samples[0][key][0])
+                else:
+                    inner_type = None
+                to_return[key] = {
+                    'type': ['null', 'array'],
+                    'items': {'type': inner_type},
+                }
+            elif datatype == 'object':
+                to_return[key] = {
+                    'type': ['null', 'object'],
                 }
             else:
                 to_return[key] = {

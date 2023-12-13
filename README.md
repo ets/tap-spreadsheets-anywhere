@@ -145,7 +145,7 @@ meltano elt --catalog=my-catalog.json --job_id=my-job-state tap-spreadsheets-any
 
 ### JSON support
 
-JSON files are expected to parse as a root-level array of objects where each object is a set of flat key-value pairs.
+JSON files are expected to parse as a root-level array of objects where each object is a set of key-value pairs.
 ```json
 [
     { "name": "row one", "key": 42},

@@ -64,7 +64,7 @@ class TestConverter(unittest.TestCase):
                                         'number': 1}), 'string')
         self.assertEqual(pick_datatype({}), 'string')
 
-    def test_generate_schema(self):
+    def test_generate_schema_flat(self):
         self.assertEqual(
             generate_schema([{'id': '1', 'first_name': 'Connor'},
                              {'id': '2', 'first_name': '1'}]),
@@ -88,3 +88,35 @@ class TestConverter(unittest.TestCase):
                              {'id': '2', 'date': '2017-01-02'}]),
             {'id': {'type': ['null', 'integer'],},
              'date': {'type': ['null', 'string'],}})
+
+    def test_generate_schema_array_valid(self):
+        self.assertEqual(
+            generate_schema([{'value': ['foo', 'bar', 'baz', None]}]),
+            {'value': {'type': ['null', 'array'], 'items': {'type': 'string'}}})
+        self.assertEqual(
+            generate_schema([{'value': [1, 2, 3, None]}]),
+            {'value': {'type': ['null', 'array'], 'items': {'type': 'integer'}}})
+        self.assertEqual(
+            generate_schema([{'value': ['1', '2', '3', None]}]),
+            {'value': {'type': ['null', 'array'], 'items': {'type': 'integer'}}})
+        self.assertEqual(
+            generate_schema([{'value': [42.42, 84.84, None]}]),
+            {'value': {'type': ['null', 'array'], 'items': {'type': 'number'}}})
+        self.assertEqual(
+            generate_schema([{'value': [True, None]}]),
+            {'value': {'type': ['null', 'array'], 'items': {'type': 'boolean'}}})
+
+    def test_generate_schema_array_empty_na(self):
+        self.assertEqual(
+            generate_schema([{'value': [None]}]),
+            {'value': {'type': ['null', 'array'], 'items': {'type': None}}})
+        self.assertEqual(
+            generate_schema([{'value': []}]),
+            {'value': {'type': ['null', 'array'], 'items': {'type': None}}})
+
+    def test_generate_schema_object(self):
+        self.assertEqual(
+            generate_schema([{'id': '1', 'value': {'foo': 'bar'}},
+                             {'id': '2', 'value': {'baz': 'qux'}}]),
+            {'id': {'type': ['null', 'integer'],},
+             'value': {'type': ['null', 'object'],}})

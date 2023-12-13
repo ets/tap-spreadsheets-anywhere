@@ -55,6 +55,22 @@ TEST_TABLE_SPEC = {
             "start_date": "2017-05-01T00:00:00Z",
             "key_properties": [],
             "format": "detect"
+        },
+        {
+            "path": "file://./tap_spreadsheets_anywhere/test",
+            "name": "jsonl_sample_with_array",
+            "pattern": "sample-array\\.jsonl",
+            "start_date": "2017-05-01T00:00:00Z",
+            "key_properties": [],
+            "format": "detect"
+        },
+        {
+            "path": "file://./tap_spreadsheets_anywhere/test",
+            "name": "jsonl_sample_with_object",
+            "pattern": "sample-object\\.jsonl",
+            "start_date": "2017-05-01T00:00:00Z",
+            "key_properties": [],
+            "format": "detect"
         }
     ]
 }
@@ -120,4 +136,35 @@ class TestJsonFormatHandler(unittest.TestCase):
         for row in iterator:
             row_count += 1
             self.assertEqual(3884, row['id'], f"ID field is {row['id']} - expected it to be 3884.")
+        self.assertEqual(expected_row_count, row_count, f"Expected row_count to be {expected_row_count} but was {row_count}")
+
+    def test_jsonl_with_array(self):
+        """
+        Verify arrays are propagated without serializing them to strings.
+        """
+        test_filename_uri = './tap_spreadsheets_anywhere/test/type-array.jsonl'
+        iterator = format_handler.get_row_iterator(TEST_TABLE_SPEC['tables'][6], test_filename_uri)
+        records = list(iterator)
+        expected_row_count = 3
+        row_count = len(records)
+        self.assertEqual({"id": 1, "value": [1.1, 2.1, 1.1, 1.3]}, records[0])
+        self.assertEqual(expected_row_count, row_count, f"Expected row_count to be {expected_row_count} but was {row_count}")
+
+    def test_jsonl_with_object(self):
+        """
+        Verify objects are propagated without serializing them to strings.
+        """
+        test_filename_uri = './tap_spreadsheets_anywhere/test/type-object.jsonl'
+        iterator = format_handler.get_row_iterator(TEST_TABLE_SPEC['tables'][7], test_filename_uri)
+        records = list(iterator)
+        expected_row_count = 6
+        row_count = len(records)
+        self.assertEqual([
+            {"id": 1, "value": {"string": "foo"}},
+            {"id": 2, "value": {"integer": 42}},
+            {"id": 3, "value": {"float": 42.42}},
+            {"id": 4, "value": {"boolean": True}},
+            {"id": 5, "value": {"nested-array": [1, 2, 3]}},
+            {"id": 6, "value": {"nested-object": {"foo": "bar"}}},
+        ], records)
         self.assertEqual(expected_row_count, row_count, f"Expected row_count to be {expected_row_count} but was {row_count}")
