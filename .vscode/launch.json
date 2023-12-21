@@ -38,6 +38,18 @@
         "justMyCode": false,
         "env": { "PYTHONPATH": "${workspaceRoot}"},
         "envFile": "${workspaceFolder}/.env",
-      }
+      },
+      {
+        "name": "test new config",
+        "type": "python",
+        "request": "launch",
+        "module": "tap_spreadsheets_anywhere.__main__",
+        "args": ["--config", ".secrets/config1.json"],
+        "python": "${command:python.interpreterPath}",
+        // Set to true to debug third-party library code
+        "justMyCode": false,
+        "env": { "PYTHONPATH": "${workspaceRoot}"},
+        "envFile": "${workspaceFolder}/.env",
+      },
     ]
   }
