@@ -32,6 +32,11 @@ def get_streamreader(uri, universal_newlines=True, newline='', open_mode='r', en
     SCHEME_SEP = "://"
     kwargs = kwarg_dispatch.get(uri.split(SCHEME_SEP, 1)[0], lambda: {})()
 
+    # When reading in binary mode, undefine `encoding`.
+    # Otherwise, `smart_open` will return a `TextIOWrapper` in `"r"` mode.
+    # However, reading binary streams needs a `BufferedReader`.
+    if "b" in open_mode:
+        encoding = None
     streamreader = smart_open.open(uri, open_mode, newline=newline, errors='surrogateescape', encoding=encoding, **kwargs)
 
     if not universal_newlines and isinstance(streamreader, StreamReader):
