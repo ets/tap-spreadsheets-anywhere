@@ -6,9 +6,16 @@ import xlrd
 
 LOGGER = logging.getLogger(__name__)
 
-def generator_wrapper(reader):
+def generator_wrapper(reader, table_spec: dict={}) -> dict:
+    skip_initial = table_spec.get("skip_initial", 0)
+    _skip_count = 0
     header_row = None
     for row in reader:
+        if _skip_count < skip_initial:
+            LOGGER.debug("Skipped (%d/%d) row: %r", _skip_count, skip_initial, row)
+            _skip_count += 1
+            continue
+
         to_return = {}
         if header_row is None:
             header_row = row
@@ -58,11 +65,11 @@ def get_legacy_row_iterator(table_spec, file_handle):
         except Exception as e:
             LOGGER.info(e)
             sheet = workbook.sheet_by_name(sheet_name_list[0])
-    return generator_wrapper(sheet.get_rows())
+    return generator_wrapper(sheet.get_rows(), table_spec)
 
 
 def get_row_iterator(table_spec, file_handle):
-    workbook = openpyxl.load_workbook(file_handle, read_only=True)
+    workbook = openpyxl.load_workbook(file_handle.name, read_only=True)
     
     if "worksheet_name" in table_spec:
         try:
@@ -88,4 +95,4 @@ def get_row_iterator(table_spec, file_handle):
         except Exception as e:
             LOGGER.info(e)
             active_sheet = worksheets[0]
-    return generator_wrapper(active_sheet)
+    return generator_wrapper(active_sheet, table_spec)
