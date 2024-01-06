@@ -9,6 +9,7 @@ This is a [Singer](https://singer.io) tap that reads data from spreadsheet files
 - S3
 - local directories (file://) 
   - NOTE: that absolute paths look like this "file:///root/child/target" with three forward slashes
+  - NOTE: on windows to point to a seperate drive letter an absolute path will not work, if you'd like to point to a folder on your `D` drive use "file://d:/data/subfolder"
 - HTTP, HTTPS (read-only)
 - SSH, SCP and SFTP
 - WebHDFS
