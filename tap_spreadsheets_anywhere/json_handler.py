@@ -1,4 +1,5 @@
 import json
+from jsonpath_ng.ext import parse
 import re
 from json import JSONDecodeError
 import logging
@@ -25,8 +26,12 @@ def get_row_iterator(table_spec, reader):
     try:
         json_array = json.load(reader)
         json_path = table_spec.get('json_path', None)
+
         if json_path is not None:
-            json_array = json_array[json_path]
+            if json_path in json_array:
+                json_array = json_array[json_path]
+            else:
+                return generator_wrapper(match.value for match in parse(json_path).find(json_array))
 
         # throw a TypeError if the root json object can not be iterated
         return generator_wrapper(iter(json_array))
@@ -39,7 +44,3 @@ def get_row_iterator(table_spec, reader):
             return generator_wrapper(json_objects)
         else:
             raise jde
-
-
-
-
