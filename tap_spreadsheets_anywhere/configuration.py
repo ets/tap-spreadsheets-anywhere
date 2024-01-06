@@ -32,8 +32,8 @@ CONFIG_CONTRACT = Schema({
         Optional('prefer_schema_as_string'): bool,
         Optional('schema_overrides'): {
             str: {
-                Required('type'): Any(Any('null','string','integer','number','date-time'),
-                                      [Any('null','string','integer','number','date-time')])
+                Required('type'): Any(Any('null','string','integer','number','date-time','object'),
+                                      [Any('null','string','integer','number','date-time','object')])
             }
         }
     }]
