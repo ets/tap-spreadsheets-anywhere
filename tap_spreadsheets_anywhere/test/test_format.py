@@ -212,8 +212,8 @@ class TestFormatHandler(unittest.TestCase):
 
 class TestFormatHandlerExcelXlsxSkipInitial:
     """pytests to validate Skip Initial for Excel `.xlsx` files works as expected."""
-    bad_file = Path(__file__).cwd() / "sample_with_bad_blank_line_above_headings.xlsx"
-    uri = f"file://{bad_file.absolute()}"
+    bad_file = "./tap_spreadsheets_anywhere/test/sample_with_bad_blank_line_above_headings.xlsx"
+    uri = f"file://{bad_file}"
 
     def test_validate_iterator(self, tmpdir):
         xlsx = tmpdir / "fake_test.xlsx"
