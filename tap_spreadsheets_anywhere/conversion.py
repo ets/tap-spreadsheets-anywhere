@@ -2,6 +2,7 @@ import dateutil
 import pytz
 import logging
 import pickle
+from collections.abc import MutableMapping
 
 LOGGER = logging.getLogger(__name__)
 
@@ -71,6 +72,13 @@ def convert(datum, desired_type=None):
         except (ValueError, TypeError):
             pass
 
+    if desired_type in (None, 'object'):
+        try:
+            if isinstance(datum, MutableMapping):
+                return datum, 'object'
+        except (ValueError, TypeError):
+            pass
+
     return str(datum), 'string',
 
 
@@ -117,6 +125,8 @@ def pick_datatype(counts,prefer_number_vs_integer=False):
             to_return = 'number'
         elif counts.get('date-time', 0) > 0:
             to_return = 'date-time'
+        elif counts.get('object', 0) > 0:
+            to_return = 'object'
         elif counts.get('string', 0) <= 0:
             LOGGER.warning(f"Unexpected data type encountered in histogram {counts}. Defaulting type to String.")
 

@@ -32,6 +32,11 @@ def get_streamreader(uri, universal_newlines=True, newline='', open_mode='r', en
     SCHEME_SEP = "://"
     kwargs = kwarg_dispatch.get(uri.split(SCHEME_SEP, 1)[0], lambda: {})()
 
+    # When reading in binary mode, undefine `encoding`.
+    # Otherwise, `smart_open` will return a `TextIOWrapper` in `"r"` mode.
+    # However, reading binary streams needs a `BufferedReader`.
+    if "b" in open_mode:
+        encoding = None
     streamreader = smart_open.open(uri, open_mode, newline=newline, errors='surrogateescape', encoding=encoding, **kwargs)
 
     if not universal_newlines and isinstance(streamreader, StreamReader):
@@ -157,10 +162,12 @@ def get_row_iterator(table_spec, uri):
             reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r', encoding=encoding)
             iterator = tap_spreadsheets_anywhere.csv_handler.get_row_iterator(table_spec, reader)
         elif format == 'excel':
-            reader = get_streamreader(uri, universal_newlines=universal_newlines,newline=None, open_mode='rb')
             if uri.lower().endswith(".xls"):
+                reader = get_streamreader(uri, universal_newlines=universal_newlines,newline=None, open_mode='rb')
                 iterator = tap_spreadsheets_anywhere.excel_handler.get_legacy_row_iterator(table_spec, reader)
             else:
+                # If encoding is set, smart_open will override binary mode ('b' in open_mode) and it will result in a BadZipFile error
+                reader = get_streamreader(uri, universal_newlines=universal_newlines,newline=None, open_mode='rb', encoding=None)
                 iterator = tap_spreadsheets_anywhere.excel_handler.get_row_iterator(table_spec, reader)
         elif format == 'json':
             reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r', encoding=encoding)
@@ -171,7 +178,9 @@ def get_row_iterator(table_spec, uri):
     except (ValueError,TypeError) as err:
         raise InvalidFormatError(uri,message=err)
 
-    for _ in range(skip_initial):
-        next(iterator)
+    if format != 'excel':
+        # Reduce the scope of changes to fix Issue #52.
+        for _ in range(skip_initial):
+            next(iterator)
 
     return iterator

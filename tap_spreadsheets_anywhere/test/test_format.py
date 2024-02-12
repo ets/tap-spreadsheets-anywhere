@@ -2,14 +2,18 @@ import codecs
 import json
 import logging
 import unittest
+from datetime import datetime
+from pathlib import Path
 from unittest.mock import patch
 
 import dateutil
+import pytest
 import smart_open
 from six import StringIO
 
 from tap_spreadsheets_anywhere import configuration, file_utils, csv_handler, json_handler, generate_schema
 from tap_spreadsheets_anywhere.format_handler import monkey_patch_streamreader, get_row_iterator
+from tap_spreadsheets_anywhere.test.test_excel_handler import get_worksheet
 
 
 LOGGER = logging.getLogger(__name__)
@@ -204,3 +208,63 @@ class TestFormatHandler(unittest.TestCase):
 
         row = next(iterator)
         self.assertTrue(len(row)>1,"Not able to read a row.")
+
+
+class TestFormatHandlerExcelXlsxSkipInitial:
+    """pytests to validate Skip Initial for Excel `.xlsx` files works as expected."""
+    bad_file = "./tap_spreadsheets_anywhere/test/sample_with_bad_blank_line_above_headings.xlsx"
+    uri = f"file://{bad_file}"
+
+    def test_validate_iterator(self, tmpdir):
+        xlsx = tmpdir / "fake_test.xlsx"
+        uri = f"file://{xlsx}"
+        _, workbook, _, exp = get_worksheet()
+        workbook.save(xlsx)
+
+        iterator = get_row_iterator({"format": "excel"}, uri)
+        assert next(iterator) == exp[0]
+        assert next(iterator) == exp[1]
+        assert next(iterator) == exp[2]
+        with pytest.raises(StopIteration):
+            next(iterator)
+
+    def test_bad_blank_line_above_headings_raises(self):
+        """Test to verify a sample file that raises #52.
+        Iteratting through this bad sample file will currently fail
+        when parsing the blank line.
+        """
+        table_spec = {"format": "excel"}
+        iterator = get_row_iterator(table_spec, self.uri)
+        with pytest.raises(IndexError):
+            for _ in iterator:
+                continue
+
+    def test_bad_blank_line_above_headings_skip_initial_over_bad_row(self):
+        """Test to verify a sample file that raises #52, does not fail when
+        using: `skip_interval`, to avoid the bad row.
+        """
+        # NOTE: that `get_row_iterator` will compress the header row and each
+        # subsequent data row together, so count one less row than in the file
+        # + expect a dict.
+        exp = {
+           'account': 'Sales - Commission Fees',
+           'account_code': 9999.0,
+           'account_type': 'Revenue',
+           'contact': 'Company A Limited',
+           'credit_gbp': 123.45,
+           'date': datetime(2023, 1, 31, 0, 0),
+           'debit_gbp': 0.0,
+           'description': 'Description for Company A',
+           'gross_gbp': 123.45,
+           'invoice_number': 'INV-1234',
+           'net_gbp': 1234.45,
+           'reference': 'REF-1234',
+           'revenue_type': 'Commission Fees',
+           'vat_gbp': 0.0,
+        }
+        table_spec = {"format": "excel", "skip_initial": 4}
+        # NOTE: `get_row_iterator` should no longer fail with Issue #52, now
+        # that: `excel_handler.generator_wrapper` is not parsing skipped rows.
+        iterator = get_row_iterator(table_spec, self.uri)
+        # Assert that the expected row, after skipping, is next.
+        assert next(iterator) == exp
