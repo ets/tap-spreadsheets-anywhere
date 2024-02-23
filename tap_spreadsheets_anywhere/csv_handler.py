@@ -1,6 +1,7 @@
 import csv
 import re
 import logging
+import sys
 
 LOGGER = logging.getLogger(__name__)
 
@@ -46,4 +47,5 @@ def get_row_iterator(table_spec, reader):
             csv.register_dialect(dialect, custom_dialect)
 
     reader = csv.DictReader(reader, fieldnames=field_names, dialect=dialect)
+    csv.field_size_limit(sys.maxsize)
     return generator_wrapper(reader)
