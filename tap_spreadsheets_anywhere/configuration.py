@@ -30,6 +30,9 @@ CONFIG_CONTRACT = Schema({
         Optional('max_sampled_files'): int,
         Optional('prefer_number_vs_integer'): bool,
         Optional('prefer_schema_as_string'): bool,
+        Optional('split_edifact_column'): str,
+        Optional('edifact_message_batch_size'): int,
+        Optional('edifact_max_size'): int,
         Optional('schema_overrides'): {
             str: {
                 Required('type'): Any(Any('null','string','integer','number','date-time','object'),
