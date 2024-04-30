@@ -111,6 +111,8 @@ def sync(config, state, catalog):
             )
             modified_since = dateutil.parser.parse(
                 state.get(stream.tap_stream_id, {}).get('modified_since') or table_spec['start_date'])
+            # Before sending records, send the state in case the process gets interrupted or no records are streamed (to not lose the modified_since value)
+            singer.write_state(state)
             target_files = file_utils.get_matching_objects(table_spec, modified_since)
             max_records_per_run = table_spec.get('max_records_per_run', -1)
             records_streamed = 0
