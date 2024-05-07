@@ -129,7 +129,7 @@ def get_matching_objects(table_spec, modified_since=None):
     if protocol == 's3':
         target_objects = list_files_in_s3_bucket(bucket, table_spec.get('search_prefix'))
     elif protocol == 'file':
-        target_objects = list_files_in_local_bucket(bucket, table_spec.get('search_prefix'))
+        target_objects = list_files_in_local_bucket(bucket)
     elif protocol in ["sftp"]:
         target_objects = list_files_in_SSH_bucket(table_spec['path'],table_spec.get('search_prefix'))
     elif protocol in ["ftp"]:
@@ -247,22 +247,17 @@ def list_files_in_ftp_server(uri, search_prefix=None):
 def raise_error(error):
     raise error
 
-def list_files_in_local_bucket(bucket, search_prefix=None):
+def list_files_in_local_bucket(bucket):
     local_filenames = []
     path = bucket
-    if search_prefix is not None:
-        path = os.path.join(bucket, search_prefix)
-
+    
     LOGGER.info(f"Walking {path}.")
-    max_results = 10000
     for (dirpath, dirnames, filenames) in walk(path, onerror=raise_error):
         for filename in filenames:
             abspath = os.path.join(dirpath,filename)
             relpath = os.path.relpath(abspath, path)
             local_filenames.append(relpath)
-        if len(local_filenames) > max_results:
-            raise ValueError(f"Read more than {max_results} records from the path {path}. Use a more specific "
-                             f"search_prefix")
+
 
     LOGGER.info("Found {} files.".format(len(local_filenames)))
     # for filename in local_filenames:
