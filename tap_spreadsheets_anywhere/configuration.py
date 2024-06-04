@@ -12,7 +12,7 @@ CONFIG_CONTRACT = Schema({
         Required('pattern'): str,
         Required('start_date'): str,
         Required('key_properties'): [str],
-        Required('format'): Any('csv', 'excel', 'json', 'jsonl', 'detect'),
+        Required('format'): Any('csv', 'excel', 'json', 'jsonl', 'parquet', 'detect'),
         Optional('encoding'): str,
         Optional('invalid_format_action'): Any('ignore','fail'),
         Optional('universal_newlines'): bool,
