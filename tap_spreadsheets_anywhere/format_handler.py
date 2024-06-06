@@ -5,8 +5,11 @@ import tap_spreadsheets_anywhere.csv_handler
 import tap_spreadsheets_anywhere.excel_handler
 import tap_spreadsheets_anywhere.json_handler
 import tap_spreadsheets_anywhere.jsonl_handler
+import tap_spreadsheets_anywhere.parquet_handler
+
 from azure.storage.blob import BlobServiceClient
 import os
+
 
 class InvalidFormatError(Exception):
     def __init__(self, fname, message="The file was not in the expected format"):
@@ -139,6 +142,8 @@ def get_row_iterator(table_spec, uri):
             format = 'jsonl'
         elif lowered_uri.endswith(".csv"):
             format = 'csv'
+        elif lowered_uri.endswith(".parquet"):
+            format = 'parquet'
         else:
             # TODO: some protocols provide the ability to pull format (content-type) info & we could make use of that here
             reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r', encoding=encoding)
@@ -169,6 +174,9 @@ def get_row_iterator(table_spec, uri):
                 # If encoding is set, smart_open will override binary mode ('b' in open_mode) and it will result in a BadZipFile error
                 reader = get_streamreader(uri, universal_newlines=universal_newlines,newline=None, open_mode='rb', encoding=None)
                 iterator = tap_spreadsheets_anywhere.excel_handler.get_row_iterator(table_spec, reader)
+        elif format == 'parquet':
+            reader = get_streamreader(uri, universal_newlines=universal_newlines, newline=None, open_mode='rb')
+            iterator = tap_spreadsheets_anywhere.parquet_handler.get_row_iterator(table_spec, reader)
         elif format == 'json':
             reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r', encoding=encoding)
             iterator = tap_spreadsheets_anywhere.json_handler.get_row_iterator(table_spec, reader)
