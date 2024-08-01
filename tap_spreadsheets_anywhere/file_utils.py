@@ -1,7 +1,7 @@
 import re
 
 import pytz
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 import dateutil
 import requests
@@ -297,10 +297,17 @@ def list_files_in_s3_bucket(bucket, search_prefix=None):
     }
     if search_prefix is not None:
         args['Prefix'] = search_prefix
+    
+    # We will ignore files that were added during the listing process.
+    # Otherwise we may skip files, as we list by lexigraphical order.
+    # 1 Minute delta, in order to take care of clock skew between S3 and our client
+    cutoff_datetime = datetime.now(tz=timezone.utc) - timedelta(minutes=1)
+    
+    LOGGER.info("Listing files up until {}.".format(cutoff_datetime))
 
     result = s3_client.list_objects_v2(**args)
     if result['KeyCount'] > 0:
-        s3_objects += result['Contents']
+        s3_objects += [res for res in result['Contents'] if res['LastModified'] < cutoff_datetime]
         next_continuation_token = result.get('NextContinuationToken')
 
         while next_continuation_token is not None:
@@ -311,7 +318,7 @@ def list_files_in_s3_bucket(bucket, search_prefix=None):
 
             result = s3_client.list_objects_v2(**continuation_args)
 
-            s3_objects += result['Contents']
+            s3_objects += [res for res in result['Contents'] if res['LastModified'] < cutoff_datetime]
             next_continuation_token = result.get('NextContinuationToken')
 
     LOGGER.info("Found {} files.".format(len(s3_objects)))
