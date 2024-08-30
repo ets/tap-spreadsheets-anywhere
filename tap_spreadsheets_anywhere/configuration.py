@@ -33,6 +33,7 @@ CONFIG_CONTRACT = Schema({
         Optional('split_edifact_column'): str,
         Optional('edifact_message_batch_size'): int,
         Optional('edifact_max_size'): int,
+        Optional('num_files_to_prefetch'): int,
         Optional('schema_overrides'): {
             str: {
                 Required('type'): Any(Any('null','string','integer','number','date-time','object'),

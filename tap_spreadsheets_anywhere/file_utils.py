@@ -38,38 +38,34 @@ def _hide_credentials(path):
     return path
 
 
-def write_file(target_filename, table_spec, schema, max_records=-1):
+def write_file(source_iterator, target_filename, table_spec, schema, max_records=-1):
     LOGGER.info('Syncing file "{}".'.format(target_filename))
-    target_uri = resolve_target_uri(table_spec, target_filename)
+    
+    if source_iterator is None:
+        LOGGER.info('Skipping syncing file "{}".'.format(target_filename))
+        return 0
+    
     records_synced = 0
-    try:
-        iterator = tap_spreadsheets_anywhere.format_handler.get_row_iterator(table_spec, target_uri)
-        for row in iterator:
-            metadata = {
-                '_smart_source_bucket': _hide_credentials(table_spec['path']),
-                '_smart_source_file': target_filename,
-                # index zero, +1 for header row
-                '_smart_source_lineno': records_synced + 2
-            }
+    for row in source_iterator:
+        metadata = {
+            '_smart_source_bucket': _hide_credentials(table_spec['path']),
+            '_smart_source_file': target_filename,
+            # index zero, +1 for header row
+            '_smart_source_lineno': records_synced + 2
+        }
 
-            try:
-                record_with_meta = {**conversion.convert_row(row, schema), **metadata}
-                singer.write_record(table_spec['name'], record_with_meta)
-            except BrokenPipeError as bpe:
-                LOGGER.error(
-                    f'Pipe to loader broke after {records_synced} records were written from {target_filename}: troubled '
-                    f'line was {record_with_meta}')
-                raise bpe
+        try:
+            record_with_meta = {**conversion.convert_row(row, schema), **metadata}
+            singer.write_record(table_spec['name'], record_with_meta)
+        except BrokenPipeError as bpe:
+            LOGGER.error(
+                f'Pipe to loader broke after {records_synced} records were written from {target_filename}: troubled '
+                f'line was {record_with_meta}')
+            raise bpe
 
-            records_synced += 1
-            if 0 < max_records <= records_synced:
-                break
-
-    except tap_spreadsheets_anywhere.format_handler.InvalidFormatError as ife:
-        if table_spec.get('invalid_format_action','fail').lower() == "ignore":
-            LOGGER.exception(f"Ignoring unparseable file: {target_filename}",ife)
-        else:
-            raise ife
+        records_synced += 1
+        if 0 < max_records <= records_synced:
+            break
 
     return records_synced
 

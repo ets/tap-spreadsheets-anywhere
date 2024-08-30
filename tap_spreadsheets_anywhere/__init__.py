@@ -7,10 +7,12 @@ import singer
 from singer import utils
 from singer.catalog import Catalog, CatalogEntry
 from singer.schema import Schema
+from concurrent.futures import ThreadPoolExecutor
 
 from tap_spreadsheets_anywhere.configuration import Config
 import tap_spreadsheets_anywhere.conversion as conversion
 import tap_spreadsheets_anywhere.file_utils as file_utils
+import tap_spreadsheets_anywhere.format_handler
 
 LOGGER = logging.getLogger(__name__)
 
@@ -115,19 +117,40 @@ def sync(config, state, catalog):
             singer.write_state(state)
             target_files = file_utils.get_matching_objects(table_spec, modified_since)
             max_records_per_run = table_spec.get('max_records_per_run', -1)
+            num_files_to_prefetch = table_spec.get('num_files_to_prefetch', 1)
             records_streamed = 0
-            for t_file in target_files:
-                records_streamed += file_utils.write_file(t_file['key'], table_spec, merged_schema, max_records=max_records_per_run-records_streamed)
-                if 0 < max_records_per_run <= records_streamed:
-                    LOGGER.info(f'Processed the per-run limit of {records_streamed} records for stream "{stream.tap_stream_id}". Stopping sync for this stream.')
-                    break
-                state[stream.tap_stream_id] = {'modified_since': t_file['last_modified'].isoformat()}
-                singer.write_state(state)
+            
+            with ThreadPoolExecutor(max_workers=num_files_to_prefetch) as pool:
+                for prefetch_batch in sublists(target_files,num_files_to_prefetch):
+                    futures = {}
+                    for t_file in prefetch_batch:
+                        target_uri = file_utils.resolve_target_uri(table_spec, t_file['key'])
+                        try:
+                            futures[t_file['key']] = pool.submit(tap_spreadsheets_anywhere.format_handler.get_row_iterator, table_spec, target_uri)
+                        except tap_spreadsheets_anywhere.format_handler.InvalidFormatError as ife:
+                            if table_spec.get('invalid_format_action','fail').lower() == "ignore":
+                                LOGGER.exception(f"Ignoring unparseable file: {t_file['key']}",ife)
+                            else:
+                                raise ife
+                    for t_file in prefetch_batch:
+                        records_streamed += file_utils.write_file(futures[t_file['key']].result(), t_file['key'], table_spec, merged_schema, max_records=max_records_per_run-records_streamed)
+                        if 0 < max_records_per_run <= records_streamed:
+                            LOGGER.info(f'Processed the per-run limit of {records_streamed} records for stream "{stream.tap_stream_id}". Stopping sync for this stream.')
+                            break
+                        state[stream.tap_stream_id] = {'modified_since': t_file['last_modified'].isoformat()}
+                        singer.write_state(state)
 
             LOGGER.info(f'Wrote {records_streamed} records for stream "{stream.tap_stream_id}".')
         else:
             LOGGER.warn(f'Skipping processing for stream [{stream.tap_stream_id}] without a config block.')
     return
+
+def sublists(list, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(list), n):
+        yield list[i:i + n]
+        
+
 
 REQUIRED_CONFIG_KEYS = 'tables'
 
