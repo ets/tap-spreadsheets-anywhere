@@ -112,6 +112,7 @@ def sync(config, state, catalog):
             modified_since = dateutil.parser.parse(
                 state.get(stream.tap_stream_id, {}).get('modified_since') or table_spec['start_date'])
             sync_timestamp = singer.utils.now()
+            LOGGER.info(f'Getting data modified since {modified_since} and before {sync_timestamp.isoformat()} for stream "{stream.tap_stream_id}".')
             target_files = file_utils.get_matching_objects(table_spec, modified_since)
             max_records_per_run = table_spec.get('max_records_per_run', -1)
             records_streamed = 0
