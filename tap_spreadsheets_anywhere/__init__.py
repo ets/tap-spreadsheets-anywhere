@@ -111,6 +111,7 @@ def sync(config, state, catalog):
             )
             modified_since = dateutil.parser.parse(
                 state.get(stream.tap_stream_id, {}).get('modified_since') or table_spec['start_date'])
+            sync_timestamp = singer.utils.now()
             target_files = file_utils.get_matching_objects(table_spec, modified_since)
             max_records_per_run = table_spec.get('max_records_per_run', -1)
             records_streamed = 0
@@ -119,8 +120,9 @@ def sync(config, state, catalog):
                 if 0 < max_records_per_run <= records_streamed:
                     LOGGER.info(f'Processed the per-run limit of {records_streamed} records for stream "{stream.tap_stream_id}". Stopping sync for this stream.')
                     break
-                state[stream.tap_stream_id] = {'modified_since': t_file['last_modified'].isoformat()}
-                singer.write_state(state)
+            state[stream.tap_stream_id] = {'modified_since': sync_timestamp.isoformat()}
+            singer.write_state(state)
+            LOGGER.info(f'Wrote state of modified_since: {sync_timestamp.isoformat()} for stream "{stream.tap_stream_id}".')
 
             LOGGER.info(f'Wrote {records_streamed} records for stream "{stream.tap_stream_id}".')
         else:
