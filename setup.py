@@ -16,6 +16,8 @@ setup(
         'paramiko',
         'protobuf>=4.21.12',
         'pyarrow>=5.0.0',
+        'pyexcel>=0.7',
+        'pyexcel-ods3>=0.6',
         'singer-python>=5.0.12',
         'smart_open>=2.1',
         'voluptuous>=0.10.5',
