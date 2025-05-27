@@ -1,6 +1,7 @@
 import smart_open
 
 from codecs import StreamReader
+import tap_spreadsheets_anywhere.calc_handler
 import tap_spreadsheets_anywhere.csv_handler
 import tap_spreadsheets_anywhere.excel_handler
 import tap_spreadsheets_anywhere.json_handler
@@ -136,6 +137,8 @@ def get_row_iterator(table_spec, uri):
         lowered_uri = uri.lower()
         if lowered_uri.endswith(".xlsx") or lowered_uri.endswith(".xls"):
             format = 'excel'
+        elif lowered_uri.endswith(".ods"):
+            format = 'ods'
         elif lowered_uri.endswith(".json") or lowered_uri.endswith(".js"):
             format = 'json'
         elif lowered_uri.endswith(".jsonl"):
@@ -174,6 +177,9 @@ def get_row_iterator(table_spec, uri):
                 # If encoding is set, smart_open will override binary mode ('b' in open_mode) and it will result in a BadZipFile error
                 reader = get_streamreader(uri, universal_newlines=universal_newlines,newline=None, open_mode='rb', encoding=None)
                 iterator = tap_spreadsheets_anywhere.excel_handler.get_row_iterator(table_spec, reader)
+        elif format == 'ods':
+            reader = get_streamreader(uri, universal_newlines=universal_newlines, newline=None, open_mode='rb')
+            iterator = tap_spreadsheets_anywhere.calc_handler.get_row_iterator(table_spec, reader)
         elif format == 'parquet':
             reader = get_streamreader(uri, universal_newlines=universal_newlines, newline=None, open_mode='rb')
             iterator = tap_spreadsheets_anywhere.parquet_handler.get_row_iterator(table_spec, reader)

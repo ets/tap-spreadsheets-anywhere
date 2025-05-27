@@ -99,7 +99,7 @@ Each object in the 'tables' array describes one or more CSV or Excel spreadsheet
 - **pattern**: This is an escaped regular expression that the tap will use to filter the listing result set returned from the listing request. This pattern potentially reduces the number of listed files that are considered as sources for the declared table. It's a bit strange, since this is an escaped string inside of an escaped string, any backslashes in the RegEx will need to be double-escaped.
 - **start_date**: This is the datetime that the tap will use to filter files, based on the modified timestamp of the file.
 - **key_properties**: These are the "primary keys" of the CSV files, to be used by the target for deduplication and primary key definitions downstream in the destination.
-- **format**: Must be either 'csv', 'json', 'jsonl' ([JSON Lines](https://jsonlines.org/)), 'excel', or 'detect'. Note that csv can be further customized with delimiter and quotechar variables below.
+- **format**: Must be either 'csv', 'json', 'jsonl' ([JSON Lines](https://jsonlines.org/)), 'excel', 'ods', or 'detect'. Note that csv can be further customized with delimiter and quotechar variables below.
 - **invalid_format_action**: (optional) By default, the tap will raise an exception if a source file can not be read
 . Set this key to "ignore" to skip such source files and continue the run.  
 - **field_names**: (optional) An array holding the names of the columns in the targeted files. If not supplied, the first row of each file must hold the desired values. 
@@ -113,7 +113,7 @@ Each object in the 'tables' array describes one or more CSV or Excel spreadsheet
 - **prefer_number_vs_integer**: (optional) If the discovery mode sampling process sees only integer values for a field, should `number` be used anyway so that floats are not considered errors? The default is false but true can help in situations where floats only appear rarely in sources and may not be detected through discovery sampling.
 - **prefer_schema_as_string**: (optional) Bool value either as true or false (default). Should the schema be all read as string by default.
 - **selected**: (optional) Should this table be synced. Defaults to true. Setting to false will skip this table on a sync run.
-- **worksheet_name**: (optional) the worksheet name to pull from in the targeted xls file(s). Only required when format is excel
+- **worksheet_name**: (optional) the worksheet name to pull from in the targeted xls file(s). Only required when format is excel or ods
 - **delimiter**: (optional) the delimiter to use when format is 'csv'. Defaults to a comma ',' but you can set delimiter to 'detect' to leverage the csv "Sniffer" for auto-detecting delimiter. 
 - **quotechar**: (optional) the character used to surround values that may contain delimiters - defaults to a double quote '"'
 - **json_path**: (optional) the JSON key under which the list of objets to use is located. Defaults to None, corresponding to an array at the top level of the JSON tree.
