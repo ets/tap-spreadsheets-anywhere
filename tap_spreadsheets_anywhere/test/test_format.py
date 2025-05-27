@@ -116,7 +116,7 @@ class TestFormatHandler(unittest.TestCase):
         iterator = get_row_iterator(TEST_TABLE_SPEC['tables'][2], test_filename_uri)
 
         for row in iterator:
-            self.assertTrue(isinstance(row['id'], float) or isinstance(row['id'], int),
+            self.assertIsInstance(row['id'], (float, int),
                             "Parsed ID is not a number for: {}".format(row['id']))
 
     def test_handle_newlines_local_json(self):
@@ -124,7 +124,7 @@ class TestFormatHandler(unittest.TestCase):
         iterator = get_row_iterator(TEST_TABLE_SPEC['tables'][3], test_filename_uri)
 
         for row in iterator:
-            self.assertTrue(isinstance(row['id'], float) or isinstance(row['id'], int),
+            self.assertIsInstance(row['id'], (float, int),
                             "Parsed ID is not a number for: {}".format(row['id']))
 
     def test_strip_newlines_local_custom_mini(self):
@@ -160,11 +160,11 @@ class TestFormatHandler(unittest.TestCase):
             raw_records = fake_out.getvalue().split('\n')
             records = [json.loads(raw) for raw in raw_records if raw]
             self.assertEqual(records_streamed, len(records),"Number records written to the pipe differed from records read from the pipe.")
-            self.assertTrue(records[0]['type'] == "RECORD")
-            self.assertTrue(len(records[0]) == 3)
-            self.assertTrue(len(records[0]['record']) == 7)
-            self.assertTrue( "_smart_source_bucket" in records[0]['record'] )
-            self.assertTrue("_smart_source_lineno" in records[0]['record'])
+            self.assertEqual(records[0]['type'], "RECORD")
+            self.assertEqual(len(records[0]), 3)
+            self.assertEqual(len(records[0]['record']), 7)
+            self.assertIn("_smart_source_bucket", records[0]['record'])
+            self.assertIn("_smart_source_lineno", records[0]['record'])
 
 
     def test_local_bucket(self):
@@ -184,7 +184,7 @@ class TestFormatHandler(unittest.TestCase):
         iterator = get_row_iterator(TEST_TABLE_SPEC['tables'][4], target_uri)
 
         row = next(iterator)
-        self.assertTrue(int(row['id']) > 0,row['id']+" was not positive")
+        self.assertGreater(int(row['id']), 0, row['id']+" was not positive")
 
     def test_indirect_https_bucket(self):
         table_spec = TEST_TABLE_SPEC['tables'][5]
@@ -196,7 +196,7 @@ class TestFormatHandler(unittest.TestCase):
         iterator = get_row_iterator(TEST_TABLE_SPEC['tables'][5], target_uri)
 
         row = next(iterator)
-        self.assertTrue( row['year'] == '1976', "Row did not contain expected data")
+        self.assertEqual(row['year'], '1976', "Row did not contain expected data")
 
     def test_renamed_https_object(self):
         table_spec = TEST_TABLE_SPEC['tables'][6]
@@ -208,7 +208,7 @@ class TestFormatHandler(unittest.TestCase):
         iterator = get_row_iterator(TEST_TABLE_SPEC['tables'][6], target_uri)
 
         row = next(iterator)
-        self.assertTrue(len(row)>1,"Not able to read a row.")
+        self.assertGreater(len(row), 1,"Not able to read a row.")
 
 
 class TestFormatHandlerExcelXlsxSkipInitial:
