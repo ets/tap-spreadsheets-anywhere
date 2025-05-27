@@ -1,6 +1,7 @@
 import smart_open
 
 from codecs import StreamReader
+import tap_spreadsheets_anywhere.calc_handler
 import tap_spreadsheets_anywhere.csv_handler
 import tap_spreadsheets_anywhere.excel_handler
 import tap_spreadsheets_anywhere.json_handler
@@ -177,8 +178,6 @@ def get_row_iterator(table_spec, uri):
                 reader = get_streamreader(uri, universal_newlines=universal_newlines,newline=None, open_mode='rb', encoding=None)
                 iterator = tap_spreadsheets_anywhere.excel_handler.get_row_iterator(table_spec, reader)
         elif format == 'ods':
-            import tap_spreadsheets_anywhere.calc_handler
-
             reader = get_streamreader(uri, universal_newlines=universal_newlines, newline=None, open_mode='rb')
             iterator = tap_spreadsheets_anywhere.calc_handler.get_row_iterator(table_spec, reader)
         elif format == 'parquet':
