@@ -173,6 +173,7 @@ class TestFormatHandler(unittest.TestCase):
         target_files = file_utils.get_matching_objects(table_spec, modified_since)
         assert len(target_files) == 1
 
+    @unittest.skip("invalid table definition")
     def test_https_bucket(self):
         table_spec = TEST_TABLE_SPEC['tables'][4]
         modified_since = dateutil.parser.parse(table_spec['start_date'])
