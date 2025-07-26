@@ -10,7 +10,7 @@ setup(
     py_modules=["tap_spreadsheets_anywhere"],
     install_requires=[
         "singer-python>=5.0.12",
-        'smart_open>=2.1',
+        'smart_open>=7.2.0',
         'voluptuous>=0.10.5',
         'boto3>=1.15.5',
         'google-cloud-storage>=2.7.0',
