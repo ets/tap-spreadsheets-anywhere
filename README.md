@@ -114,6 +114,7 @@ Each object in the 'tables' array describes one or more CSV or Excel spreadsheet
 - **prefer_schema_as_string**: (optional) Bool value either as true or false (default). Should the schema be all read as string by default.
 - **selected**: (optional) Should this table be synced. Defaults to true. Setting to false will skip this table on a sync run.
 - **worksheet_name**: (optional) the worksheet name to pull from in the targeted xls file(s). Only required when format is excel
+- **data_only**: (optional) Bool value either as true (default) or false. When enabled, get the latest value computed by Excel instead of the formula. Only required when format is Excel
 - **delimiter**: (optional) the delimiter to use when format is 'csv'. Defaults to a comma ',' but you can set delimiter to 'detect' to leverage the csv "Sniffer" for auto-detecting delimiter. 
 - **quotechar**: (optional) the character used to surround values that may contain delimiters - defaults to a double quote '"'
 - **json_path**: (optional) the JSON key under which the list of objects to use is located (corresponding to an array at the top level of the JSON tree) or [JSONPath](https://pypi.org/project/jsonpath-ng/) (should return array of objects, could be tested on (https://jsonpath.com)). Defaults to None.
