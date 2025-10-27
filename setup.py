@@ -19,6 +19,7 @@ setup(
         'xlrd',
         'paramiko',
         'azure-storage-blob>=12.14.0',
+        'jsonpath-ng>=1.5.3'
         'pyarrow>=5.0.0'
     ],
     packages=["tap_spreadsheets_anywhere"],
