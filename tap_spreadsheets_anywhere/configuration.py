@@ -12,7 +12,8 @@ CONFIG_CONTRACT = Schema({
         Required('pattern'): str,
         Required('start_date'): str,
         Required('key_properties'): [str],
-        Required('format'): Any('csv', 'excel', 'json', 'jsonl', 'detect'),
+        Required('format'): Any('csv', 'excel', 'json', 'jsonl', 'parquet', 'detect'),
+        Optional('encoding'): str,
         Optional('invalid_format_action'): Any('ignore','fail'),
         Optional('universal_newlines'): bool,
         Optional('skip_initial'): int,
@@ -31,8 +32,8 @@ CONFIG_CONTRACT = Schema({
         Optional('prefer_schema_as_string'): bool,
         Optional('schema_overrides'): {
             str: {
-                Required('type'): Any(Any('null','string','integer','number','date-time'),
-                                      [Any('null','string','integer','number','date-time')])
+                Required('type'): Any(Any('null','string','integer','number','date-time','object'),
+                                      [Any('null','string','integer','number','date-time','object')])
             }
         }
     }]

@@ -181,7 +181,7 @@ def list_files_in_SSH_bucket(uri, search_prefix=None):
     parsed_uri = ssh_transport.parse_uri(uri)
     uri_path = parsed_uri.pop('uri_path')
     transport_params={'connect_kwargs':{'allow_agent':False,'look_for_keys':False}}
-    ssh = ssh_transport._connect(parsed_uri['host'], parsed_uri['user'], parsed_uri['port'], parsed_uri['password'], transport_params=transport_params)
+    ssh = ssh_transport._connect_ssh(parsed_uri['host'], parsed_uri['user'], parsed_uri['port'], parsed_uri['password'], transport_params.get('connect_kwargs'))
     sftp_client = ssh.get_transport().open_sftp_client()
     entries = []
     max_results = 10000
@@ -244,6 +244,8 @@ def list_files_in_ftp_server(uri, search_prefix=None):
     LOGGER.info("Found {} files.".format(entries))
     return entries
 
+def raise_error(error):
+    raise error
 
 def list_files_in_local_bucket(bucket, search_prefix=None):
     local_filenames = []
@@ -253,7 +255,7 @@ def list_files_in_local_bucket(bucket, search_prefix=None):
 
     LOGGER.info(f"Walking {path}.")
     max_results = 10000
-    for (dirpath, dirnames, filenames) in walk(path):
+    for (dirpath, dirnames, filenames) in walk(path, onerror=raise_error):
         for filename in filenames:
             abspath = os.path.join(dirpath,filename)
             relpath = os.path.relpath(abspath, path)
@@ -352,6 +354,7 @@ def config_by_crawl(crawl_config):
                         "pattern": abs_pattern,
                         "key_properties": [],
                         "format": "detect",
+                        "encoding": source.get('encoding', 'utf-8'),
                         "invalid_format_action": "ignore",
                         "delimiter": "detect",
                         "max_records_per_run": source.get('max_records_per_run',-1),
@@ -373,6 +376,7 @@ def config_by_crawl(crawl_config):
                             "pattern": abs_pattern,
                             "key_properties": [],
                             "format": "detect",
+                            "encoding": source.get('encoding', 'utf-8'),
                             "invalid_format_action": "ignore",
                             "delimiter": "detect",
                             "max_records_per_run": source.get('max_records_per_run', -1),
