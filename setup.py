@@ -20,7 +20,8 @@ setup(
         'paramiko',
         'azure-storage-blob>=12.14.0',
         'jsonpath-ng>=1.5.3',
-        'pyarrow>=5.0.0'
+        'pyarrow>=5.0.0',
+        'importlib-metadata>=6.8'
     ],
     packages=["tap_spreadsheets_anywhere"],
     include_package_data=True,
