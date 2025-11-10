@@ -13,6 +13,7 @@ setup(
         'smart_open>=7.2.0',
         'voluptuous>=0.10.5',
         'boto3>=1.15.5',
+        'google-api-core==2.28.0',
         'google-cloud-storage==3.4.1',
         'protobuf>=4.21.12',
         'openpyxl',
