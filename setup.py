@@ -13,9 +13,11 @@ setup(
         'smart_open>=7.2.0',
         'voluptuous>=0.10.5',
         'boto3>=1.15.5',
+        'google-cloud-core==2.3.3',
+        'google-resumable-media==2.5.0'
         'google-api-core==2.11.1',
         'google-cloud-storage==2.9.0',
-        'protobuf==5.29.5',
+        'protobuf==4.25.8',
         'openpyxl',
         'xlrd',
         'paramiko',
