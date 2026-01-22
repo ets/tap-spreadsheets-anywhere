@@ -1,0 +1,54 @@
+{
+  "tables": [
+    {
+      "name": "customer_data",
+      "path": "s3://my-bucket/customers/",
+      "pattern": "customers_*.csv",
+      "start_date": "2023-01-01T00:00:00Z",
+      "key_properties": ["customer_id"],
+      "format": "csv",
+      
+      "schema_evolution_mode": "merge",
+      "evolve_schema_during_sync": true,
+      "evolution_sample_size": 200,
+      "schema_version": "1.0",
+      
+      "schema_overrides": {
+        "customer_id": {
+          "type": ["null", "string"]
+        },
+        "created_at": {
+          "type": ["null", "string"],
+          "format": "date-time"
+        }
+      }
+    },
+    {
+      "name": "strict_financial_data",
+      "path": "s3://my-bucket/financial/",
+      "pattern": "transactions_*.json",
+      "start_date": "2023-01-01T00:00:00Z",
+      "key_properties": ["transaction_id"],
+      "format": "json",
+      
+      "schema_evolution_mode": "strict",
+      "evolve_schema_during_sync": false
+    },
+    {
+      "name": "flexible_logs",
+      "path": "s3://my-bucket/logs/",
+      "pattern": "app_logs_*.jsonl",
+      "start_date": "2023-01-01T00:00:00Z",
+      "key_properties": ["log_id"],
+      "format": "jsonl",
+      
+      "schema_evolution_mode": "replace",
+      "evolve_schema_during_sync": true,
+      "evolution_sample_size": 50
+    }
+  ],
+  
+  "default_schema_evolution_mode": "merge",
+  "default_evolve_schema_during_sync": false,
+  "default_evolution_sample_size": 100
+}

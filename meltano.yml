@@ -1,0 +1,86 @@
+version: 1
+default_environment: dev
+project_id: tap-spreadsheets-anywhere-test
+
+environments:
+- name: dev
+- name: prod
+
+plugins:
+  extractors:
+  - name: tap-spreadsheets-anywhere
+    namespace: tap_spreadsheets_anywhere
+    pip_url: -e .
+    capabilities:
+    - discover
+    - catalog
+    - properties
+    - state
+    settings:
+    - name: tables
+      kind: array
+    - name: default_schema_evolution_mode
+      kind: string
+      value: merge
+    - name: default_evolve_schema_during_sync
+      kind: boolean
+      value: true
+    - name: schema_cache_ttl_hours
+      kind: integer
+      value: 24
+    - name: disable_catalog_cache
+      kind: boolean
+      value: false
+    - name: force_catalog_regeneration
+      kind: boolean
+      value: false
+
+  loaders:
+  - name: target-snowflake
+    namespace: pipelinewise_target_snowflake
+    pip_url: pipelinewise-target-snowflake
+    capabilities:
+    - soft-delete
+    settings:
+    - name: account
+      kind: string
+    - name: dbname
+      kind: string
+    - name: user
+      kind: string
+    - name: password
+      kind: password
+    - name: warehouse
+      kind: string
+    - name: default_target_schema
+      kind: string
+    - name: file_format
+      kind: string
+      value: csv
+    # Schema evolution settings for target-snowflake
+    - name: add_metadata_columns
+      kind: boolean
+      value: true
+    - name: hard_delete
+      kind: boolean
+      value: false
+    - name: data_flattening_max_level
+      kind: integer
+      value: 10
+    # Critical: Enable schema evolution in target
+    - name: add_metadata_columns
+      kind: boolean  
+      value: true
+    - name: flush_all_streams
+      kind: boolean
+      value: false
+
+jobs:
+- name: spreadsheets-to-snowflake
+  tasks:
+  - tap-spreadsheets-anywhere target-snowflake
+
+schedules:
+- name: daily-sync
+  job: spreadsheets-to-snowflake
+  interval: '@daily'

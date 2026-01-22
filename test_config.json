@@ -1,0 +1,13 @@
+{
+  "tables": [
+    {
+      "name": "orders",
+      "path": "file://./artifacts",
+      "pattern": "orders.csv",
+      "start_date": "2020-01-01T00:00:00Z",
+      "key_properties": ["order_number"],
+      "format": "csv",
+      "schema_evolution_mode": "merge"
+    }
+  ]
+}

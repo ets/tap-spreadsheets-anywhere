@@ -35,8 +35,19 @@ CONFIG_CONTRACT = Schema({
                 Required('type'): Any(Any('null','string','integer','number','date-time','object'),
                                       [Any('null','string','integer','number','date-time','object')])
             }
-        }
-    }]
+        },
+        Optional('schema_evolution_mode'): Any('strict', 'merge', 'replace', 'disabled'),
+        Optional('evolve_schema_during_sync'): bool,
+        Optional('evolution_sample_size'): int,
+        Optional('schema_version'): str
+    }],
+    # Global schema evolution and caching settings
+    Optional('default_schema_evolution_mode'): Any('strict', 'merge', 'replace', 'disabled'),
+    Optional('default_evolve_schema_during_sync'): bool,
+    Optional('default_evolution_sample_size'): int,
+    Optional('disable_catalog_cache'): bool,
+    Optional('force_catalog_regeneration'): bool,
+    Optional('schema_cache_ttl_hours'): int
 })
 
 class Config():

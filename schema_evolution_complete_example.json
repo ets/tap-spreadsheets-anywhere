@@ -1,0 +1,103 @@
+{
+  "_comment": "Configuration with comprehensive schema evolution and intelligent catalog caching",
+  
+  "disable_catalog_cache": false,
+  "force_catalog_regeneration": false,
+  "schema_cache_ttl_hours": 24,
+  "default_schema_evolution_mode": "merge",
+  "default_evolve_schema_during_sync": true,
+  "default_evolution_sample_size": 100,
+  
+  "tables": [
+    {
+      "name": "customer_data",
+      "path": "s3://my-bucket/customers/",
+      "pattern": "customers_*.csv",
+      "start_date": "2023-01-01T00:00:00Z",
+      "key_properties": ["customer_id"],
+      "format": "csv",
+      
+      "_comment_schema_evolution": "Merge mode with runtime evolution - safest for production",
+      "schema_evolution_mode": "merge",
+      "evolve_schema_during_sync": true,
+      "evolution_sample_size": 200,
+      "schema_version": "2.1",
+      
+      "_comment_overrides": "Lock critical fields while allowing evolution",
+      "schema_overrides": {
+        "customer_id": {
+          "type": ["null", "string"]
+        },
+        "created_at": {
+          "type": ["null", "string"],
+          "format": "date-time"
+        }
+      }
+    },
+    {
+      "name": "financial_transactions",
+      "path": "s3://my-bucket/transactions/",
+      "pattern": "txn_*.json",
+      "start_date": "2023-01-01T00:00:00Z",
+      "key_properties": ["transaction_id"],
+      "format": "json",
+      
+      "_comment_strict": "Critical financial data - no schema changes allowed",
+      "schema_evolution_mode": "strict",
+      "evolve_schema_during_sync": false
+    },
+    {
+      "name": "api_logs",
+      "path": "s3://my-bucket/logs/",
+      "pattern": "api_*.jsonl",
+      "start_date": "2023-01-01T00:00:00Z",
+      "key_properties": ["log_id"],
+      "format": "jsonl",
+      
+      "_comment_replace": "Highly dynamic log format - replace schema completely",
+      "schema_evolution_mode": "replace",
+      "evolve_schema_during_sync": true,
+      "evolution_sample_size": 50,
+      "prefer_schema_as_string": true
+    },
+    {
+      "name": "legacy_system",
+      "path": "s3://my-bucket/legacy/",
+      "pattern": "legacy_*.csv",
+      "start_date": "2023-01-01T00:00:00Z",
+      "key_properties": ["id"],
+      "format": "csv",
+      
+      "_comment_disabled": "Legacy system with manual schema management",
+      "schema_evolution_mode": "disabled",
+      "evolve_schema_during_sync": false,
+      "schema_overrides": {
+        "id": {"type": ["null", "string"]},
+        "amount": {"type": ["null", "number"]},
+        "date": {"type": ["null", "string"], "format": "date-time"}
+      }
+    }
+  ],
+  
+  "_examples": {
+    "_force_fresh_discovery": {
+      "force_catalog_regeneration": true
+    },
+    "_disable_all_caching": {
+      "disable_catalog_cache": true
+    },
+    "_custom_cache_lifetime": {
+      "schema_cache_ttl_hours": 12
+    },
+    "_conservative_production": {
+      "default_schema_evolution_mode": "merge",
+      "default_evolve_schema_during_sync": false,
+      "schema_cache_ttl_hours": 48
+    },
+    "_aggressive_development": {
+      "default_schema_evolution_mode": "replace",
+      "default_evolve_schema_during_sync": true,
+      "schema_cache_ttl_hours": 1
+    }
+  }
+}
