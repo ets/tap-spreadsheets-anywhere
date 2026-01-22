@@ -11,6 +11,8 @@ from singer.schema import Schema
 from tap_spreadsheets_anywhere.configuration import Config
 import tap_spreadsheets_anywhere.conversion as conversion
 import tap_spreadsheets_anywhere.file_utils as file_utils
+from tap_spreadsheets_anywhere.schema_evolution import SchemaEvolutionManager, validate_schema_evolution_config
+from tap_spreadsheets_anywhere.schema_persistence import SchemaStateManager
 
 LOGGER = logging.getLogger(__name__)
 
@@ -61,6 +63,9 @@ def discover(config):
     streams = []
     for table_spec in config['tables']:
         try:
+            # Validate schema evolution config
+            validate_schema_evolution_config(table_spec)
+            
             modified_since = dateutil.parser.parse(table_spec['start_date'])
             target_files = file_utils.get_matching_objects(table_spec, modified_since)
             sample_rate = table_spec.get('sample_rate',5)
@@ -95,6 +100,12 @@ def discover(config):
 
 
 def sync(config, state, catalog):
+    # Initialize schema state manager
+    state_manager = SchemaStateManager(config)
+    
+    # Initialize schema evolution manager with state manager
+    evolution_manager = SchemaEvolutionManager(config, state_manager)
+    
     # Loop over selected streams in catalog
     LOGGER.info(f"Processing {len(list(catalog.get_selected_streams(state)))} selected streams from Catalog")
     for stream in catalog.get_selected_streams(state):
@@ -104,18 +115,70 @@ def sync(config, state, catalog):
         if table_spec is not None:
             # Allow updates to our tables specification to override any previously extracted schema in the catalog
             merged_schema = override_schema_with_config(catalog_schema, table_spec)
+            
+            # Check if we have an evolved schema for this stream
+            current_schema_version = state_manager.get_current_schema_version(stream.tap_stream_id)
+            if current_schema_version:
+                # Use evolved schema if available
+                stream_schemas = state_manager._state.get('schemas', {})
+                if stream.tap_stream_id in stream_schemas:
+                    evolved_schema = stream_schemas[stream.tap_stream_id].get('current_schema')
+                    if evolved_schema:
+                        merged_schema = override_schema_with_config(evolved_schema, table_spec)
+                        LOGGER.info(f"Using evolved schema for stream {stream.tap_stream_id}")
+            
+            # Write initial schema
             singer.write_schema(
                 stream_name=stream.tap_stream_id,
                 schema=merged_schema,
                 key_properties=stream.key_properties,
             )
+            
             modified_since = dateutil.parser.parse(
                 state.get(stream.tap_stream_id, {}).get('modified_since') or table_spec['start_date'])
             target_files = file_utils.get_matching_objects(table_spec, modified_since)
             max_records_per_run = table_spec.get('max_records_per_run', -1)
             records_streamed = 0
+            
+            current_schema = merged_schema
+            
             for t_file in target_files:
-                records_streamed += file_utils.write_file(t_file['key'], table_spec, merged_schema, max_records=max_records_per_run-records_streamed)
+                # Check if we should evolve schema during sync
+                if evolution_manager.should_evolve_during_sync(table_spec):
+                    # Sample records for schema evolution
+                    sample_size = evolution_manager.get_schema_sample_size(table_spec)
+                    sample_records = []
+                    
+                    try:
+                        # Get a sample of records from this file
+                        import tap_spreadsheets_anywhere.format_handler as format_handler
+                        row_iterator = format_handler.get_row_iterator(table_spec, t_file['key'])
+                        
+                        for i, record in enumerate(row_iterator):
+                            if i >= sample_size:
+                                break
+                            sample_records.append(record)
+                        
+                        if sample_records:
+                            # Check for schema evolution
+                            evolved_schema, schema_changed = evolution_manager.evolve_schema_if_needed(
+                                stream.tap_stream_id, current_schema, sample_records, table_spec
+                            )
+                            
+                            if schema_changed:
+                                LOGGER.info(f"Schema evolved for stream {stream.tap_stream_id}, writing new schema")
+                                singer.write_schema(
+                                    stream_name=stream.tap_stream_id,
+                                    schema=evolved_schema,
+                                    key_properties=stream.key_properties,
+                                )
+                                current_schema = evolved_schema
+                                
+                    except Exception as e:
+                        LOGGER.warning(f"Schema evolution sampling failed for file {t_file['key']}: {e}")
+                
+                # Process the file with current schema
+                records_streamed += file_utils.write_file(t_file['key'], table_spec, current_schema, max_records=max_records_per_run-records_streamed)
                 if 0 < max_records_per_run <= records_streamed:
                     LOGGER.info(f'Processed the per-run limit of {records_streamed} records for stream "{stream.tap_stream_id}". Stopping sync for this stream.')
                     break
@@ -125,6 +188,9 @@ def sync(config, state, catalog):
             LOGGER.info(f'Wrote {records_streamed} records for stream "{stream.tap_stream_id}".')
         else:
             LOGGER.warn(f'Skipping processing for stream [{stream.tap_stream_id}] without a config block.')
+    
+    # Cleanup old schema evolution history
+    state_manager.cleanup_old_state()
     return
 
 REQUIRED_CONFIG_KEYS = 'tables'
@@ -146,9 +212,24 @@ def main():
         tables_config = args.config
 
     tables_config = Config.validate(tables_config)
+    
+    # Initialize schema state manager
+    state_manager = SchemaStateManager(tables_config)
+    
     # If discover flag was passed, run discovery mode and dump output to stdout
     if args.discover:
+        # Check if we can use cached catalog
+        if not state_manager.should_regenerate_catalog(tables_config['tables']):
+            cached_catalog = state_manager.load_cached_catalog()
+            if cached_catalog:
+                LOGGER.info("Using cached catalog with evolved schemas")
+                cached_catalog.dump()
+                return
+        
+        # Generate new catalog
+        LOGGER.info("Regenerating catalog through sampling")
         catalog = discover(tables_config)
+        state_manager.cache_catalog(catalog, tables_config['tables'])
         catalog.dump()
     # Otherwise run in sync mode
     else:
@@ -156,8 +237,21 @@ def main():
             catalog = args.catalog
             LOGGER.info(f"Using supplied catalog {args.catalog_path}.")
         else:
-            LOGGER.info(f"Generating catalog through sampling.")
-            catalog = discover(tables_config)
+            # Check if we can use cached catalog
+            if not state_manager.should_regenerate_catalog(tables_config['tables']):
+                cached_catalog = state_manager.load_cached_catalog()
+                if cached_catalog:
+                    LOGGER.info("Using cached catalog with evolved schemas")
+                    catalog = cached_catalog
+                else:
+                    LOGGER.info("Generating catalog through sampling")
+                    catalog = discover(tables_config)
+                    state_manager.cache_catalog(catalog, tables_config['tables'])
+            else:
+                LOGGER.info("Regenerating catalog due to configuration or schema changes")
+                catalog = discover(tables_config)
+                state_manager.cache_catalog(catalog, tables_config['tables'])
+        
         if LOGGER.isEnabledFor(logging.DEBUG):
             LOGGER.debug(f"Catalog has streams: {catalog.to_dict()}")
         sync(tables_config, args.state, catalog)
