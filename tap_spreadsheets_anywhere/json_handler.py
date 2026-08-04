@@ -24,7 +24,14 @@ def generator_wrapper(root_iterator):
 
 def get_row_iterator(table_spec, reader):
     try:
-        json_array = json.load(reader)
+        content = reader.read()
+        if not content or not content.strip():
+            if table_spec.get('empty_file_action', 'ignore').lower() == 'fail':
+                from tap_spreadsheets_anywhere.format_handler import InvalidFormatError
+                raise InvalidFormatError("File is empty.")
+            LOGGER.info("Skipping empty file.")
+            return generator_wrapper(iter([]))
+        json_array = json.loads(content)
         json_path = table_spec.get('json_path', None)
 
         if json_path is not None:
@@ -37,10 +44,10 @@ def get_row_iterator(table_spec, reader):
         return generator_wrapper(iter(json_array))
     except JSONDecodeError as jde:
         if jde.msg.startswith("Extra data"):
-            reader.seek(0)
             json_objects = []
-            for jobj in reader:
-                json_objects.append(json.loads(jobj))
+            for jobj in content.splitlines():
+                if jobj.strip():
+                    json_objects.append(json.loads(jobj))
             return generator_wrapper(json_objects)
         else:
             raise jde

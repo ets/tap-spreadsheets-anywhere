@@ -15,6 +15,7 @@ CONFIG_CONTRACT = Schema({
         Required('format'): Any('csv', 'excel', 'json', 'jsonl', 'parquet', 'detect'),
         Optional('encoding'): str,
         Optional('invalid_format_action'): Any('ignore','fail'),
+        Optional('empty_file_action'): Any('ignore','fail'),
         Optional('universal_newlines'): bool,
         Optional('skip_initial'): int,
         Optional('selected'): bool,

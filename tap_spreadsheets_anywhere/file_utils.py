@@ -67,7 +67,7 @@ def write_file(target_filename, table_spec, schema, max_records=-1):
 
     except tap_spreadsheets_anywhere.format_handler.InvalidFormatError as ife:
         if table_spec.get('invalid_format_action','fail').lower() == "ignore":
-            LOGGER.exception(f"Ignoring unparseable file: {target_filename}",ife)
+            LOGGER.exception(f"Ignoring unparseable file: {target_filename}: {ife}")
         else:
             raise ife
 
@@ -95,7 +95,7 @@ def sample_file(table_spec, target_filename, sample_rate, max_records):
         if table_spec.get('invalid_format_action','fail').lower() != "ignore":
             raise ife
         else:
-            LOGGER.exception(f"Unable to parse {target_filename}",ife)
+            LOGGER.exception(f"Unable to parse {target_filename}: {ife}")
 
     LOGGER.info('Sampled {} records.'.format(len(samples)))
     return samples
