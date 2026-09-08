@@ -1,0 +1,13 @@
+requires = [
+    "tox>=4.61",
+]
+env_list = [
+    { prefix = "3.", start = 10, stop = 14 },
+]
+
+[env_run_base]
+description = "run tests on Python {py_dot_ver}"
+dependency_groups = [ "dev" ]
+commands = [
+    [ "pytest", { replace = "posargs", default = [ "tap_spreadsheets_anywhere/test" ], extend = true } ],
+]

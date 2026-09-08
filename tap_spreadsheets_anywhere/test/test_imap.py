@@ -8,7 +8,6 @@ TOKEN = {"access_token": "new-access-token", "refresh_token": "new-refresh-token
 
 
 class TestGetImapFs(unittest.TestCase):
-
     def setUp(self):
         get_imap_fs.cache_clear()
 

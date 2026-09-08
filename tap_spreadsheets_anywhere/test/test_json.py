@@ -1,11 +1,7 @@
 import unittest
-
-import dateutil
 from io import StringIO
+
 from tap_spreadsheets_anywhere import (
-    configuration,
-    file_utils,
-    csv_handler,
     json_handler,
 )
 

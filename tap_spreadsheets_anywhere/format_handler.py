@@ -1,7 +1,7 @@
 import json
 import os
 from codecs import StreamReader
-from functools import lru_cache
+from functools import cache
 from imaplib import IMAP4
 from io import StringIO
 from urllib.parse import urlparse, urlunparse
@@ -13,7 +13,6 @@ from azure.storage.blob import BlobServiceClient
 from google.cloud.storage import Client as GCSClient
 from imapfs.core import IMAPFileSystem
 from paramiko.rsakey import RSAKey
-from singer import utils
 
 import tap_spreadsheets_anywhere.csv_handler
 import tap_spreadsheets_anywhere.excel_handler
@@ -21,9 +20,22 @@ import tap_spreadsheets_anywhere.json_handler
 import tap_spreadsheets_anywhere.jsonl_handler
 from tap_spreadsheets_anywhere.auth import refresh_microsoft_token
 
+_config: dict = {}
+
+
+def set_config(config: dict) -> None:
+    """Make the tap's validated config available to `get_transport_params`.
+
+    Called once by `main()` for a real run. Reading `sys.argv` again here (as this used to,
+    via `singer.utils.parse_args`) broke under any host whose own argv doesn't match this
+    tap's CLI contract - such as pytest.
+    """
+    global _config
+    _config = config
+
 
 def get_transport_params(protocol: str):
-    config: dict = utils.parse_args([]).config
+    config: dict = _config
 
     if protocol == "sftp":
         # https://docs.paramiko.org/en/stable/api/client.html#paramiko.client.SSHClient.connect
@@ -46,11 +58,7 @@ def get_transport_params(protocol: str):
         return {"connect_kwargs": connect_kwargs}
 
     if protocol == "azure":
-        return {
-            "client": BlobServiceClient.from_connection_string(
-                os.environ["AZURE_STORAGE_CONNECTION_STRING"]
-            )
-        }
+        return {"client": BlobServiceClient.from_connection_string(os.environ["AZURE_STORAGE_CONNECTION_STRING"])}
 
     if protocol == "gs":
         return {"client": get_gcs_client()}
@@ -60,7 +68,7 @@ def get_transport_params(protocol: str):
 
     if protocol in ["http", "https"]:
         return {}
-        
+
     if protocol == "imap":
         return {
             "username": config["username"],
@@ -68,7 +76,9 @@ def get_transport_params(protocol: str):
             **config.get("oauth_credentials", {}),
         }
 
-    if protocol == "file":
+    if protocol in ("file", ""):
+        # A blank scheme means a bare local path (e.g. no `file://` prefix), which
+        # smart_open/urlparse otherwise treat the same as a local filesystem read.
         return {}
 
     if protocol == "sharepoint":
@@ -77,14 +87,16 @@ def get_transport_params(protocol: str):
     msg = f"Protocol '{protocol}' not supported"
     raise ValueError(msg)
 
-@lru_cache(maxsize=None)
+
+@cache
 def get_gcs_client():
     credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-    
+
     try:
         return GCSClient.from_service_account_info(json.loads(credentials))
     except (TypeError, json.decoder.JSONDecodeError):
         return GCSClient()
+
 
 class InvalidFormatError(Exception):
     def __init__(self, fname, message="The file was not in the expected format"):
@@ -93,9 +105,10 @@ class InvalidFormatError(Exception):
         super().__init__(self.message)
 
     def __str__(self):
-        return f'{self.name} could not be parsed: {self.message}'
+        return f"{self.name} could not be parsed: {self.message}"
 
-@lru_cache(maxsize=None)
+
+@cache
 def get_imap_fs(host):
     transport_params = get_transport_params("imap")
 
@@ -144,15 +157,13 @@ class MSGDriveFS(msgraphfs.core.MSGDriveFS):
         return response.json()["id"]
 
 
-@lru_cache(maxsize=None)
+@cache
 def get_sharepoint_fs(uri):
     transport_params = get_transport_params("sharepoint")
 
     if "access_token" in transport_params:
         fs = MSGDriveFS(
-            oauth2_client_params={
-                "token": {"access_token": transport_params["access_token"]}
-            },
+            oauth2_client_params={"token": {"access_token": transport_params["access_token"]}},
             url_path=uri,
         )
         try:
@@ -184,6 +195,7 @@ def get_sharepoint_fs(uri):
         "  - `client_id`, `client_secret`, `tenant_id`",
     )
     raise ValueError("\n".join(lines))
+
 
 def get_streamreader(
     uri: str,
@@ -238,17 +250,17 @@ def get_streamreader(
 
 
 def monkey_patch_streamreader(streamreader):
-    streamreader.mp_newline = '\n'
+    streamreader.mp_newline = "\n"
     streamreader.readline = mp_readline.__get__(streamreader, StreamReader)
     return streamreader
 
 
 def mp_readline(self, size=None, keepends=False):
     """
-        Modified version of readline for StreamReader that avoids the use of splitlines
-        in favor of a call to split(self.mp_newline)
-        This supports poorly formatted CSVs that the author has sadly seen in the wild
-        from commercial vendors.
+    Modified version of readline for StreamReader that avoids the use of splitlines
+    in favor of a call to split(self.mp_newline)
+    This supports poorly formatted CSVs that the author has sadly seen in the wild
+    from commercial vendors.
     """
     # If we have lines cached from an earlier read, return
     # them unconditionally
@@ -269,13 +281,13 @@ def mp_readline(self, size=None, keepends=False):
     # If size is given, we call read() only once
     while True:
         data = self.read(readsize, firstline=True)
-        if data:
-            # If we're at a "\r" read one extra character (which might
-            # be a "\n") to get a proper line ending. If the stream is
-            # temporarily exhausted we return the wrong line ending.
-            if (isinstance(data, str) and data.endswith("\r")) or \
-                    (isinstance(data, bytes) and data.endswith(b"\r")):
-                data += self.read(size=1, chars=1)
+        # If we're at a "\r" read one extra character (which might
+        # be a "\n") to get a proper line ending. If the stream is
+        # temporarily exhausted we return the wrong line ending.
+        if data and (
+            (isinstance(data, str) and data.endswith("\r")) or (isinstance(data, bytes) and data.endswith(b"\r"))
+        ):
+            data += self.read(size=1, chars=1)
 
         line += data
         lines = line.split(self.mp_newline)
@@ -300,8 +312,7 @@ def mp_readline(self, size=None, keepends=False):
             line0withoutend = lines[0].split(self.mp_newline)[0]
             if line0withend != line0withoutend:  # We really have a line end
                 # Put the rest back together and keep it until the next call
-                self.charbuffer = self._empty_charbuffer.join(lines[1:]) + \
-                                  self.charbuffer
+                self.charbuffer = self._empty_charbuffer.join(lines[1:]) + self.charbuffer
                 if keepends:
                     line = line0withend
                 else:
@@ -318,60 +329,91 @@ def mp_readline(self, size=None, keepends=False):
 
 
 def get_row_iterator(table_spec, uri):
-    universal_newlines = table_spec['universal_newlines'] if 'universal_newlines' in table_spec else True
-    encoding = table_spec['encoding'] if 'encoding' in table_spec else 'utf-8'
+    universal_newlines = table_spec.get("universal_newlines", True)
+    encoding = table_spec.get("encoding", "utf-8")
     skip_initial = table_spec.get("skip_initial", 0)
 
-    if 'format' not in table_spec or table_spec['format'] == 'detect':
+    if "format" not in table_spec or table_spec["format"] == "detect":
         lowered_uri = uri.lower()
-        if lowered_uri.endswith(".xlsx") or lowered_uri.endswith(".xls"):
-            format = 'excel'
-        elif lowered_uri.endswith(".json") or lowered_uri.endswith(".js"):
-            format = 'json'
+        if lowered_uri.endswith((".xlsx", ".xls")):
+            format = "excel"
+        elif lowered_uri.endswith((".json", ".js")):
+            format = "json"
         elif lowered_uri.endswith(".jsonl"):
-            format = 'jsonl'
+            format = "jsonl"
         elif lowered_uri.endswith(".csv"):
-            format = 'csv'
+            format = "csv"
         else:
             # TODO: some protocols provide the ability to pull format (content-type) info & we could make use of that here
-            reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r', encoding=encoding)
+            reader = get_streamreader(
+                uri,
+                universal_newlines=universal_newlines,
+                open_mode="r",
+                encoding=encoding,
+            )
             buf = reader.read(10)
             reader.seek(0)
             if len(buf) > 0:
                 if buf[0].lstrip() == "[":
-                    format = 'json'
+                    format = "json"
                 elif buf[0].isprintable():
-                    format = 'csv'
+                    format = "csv"
                 else:
                     raise ValueError(f"Unable to detect the format for {uri}")
             else:
                 raise ValueError(f"Unable to read {uri} for type detection")
 
     else:
-        format = table_spec['format']
+        format = table_spec["format"]
 
     try:
-        if format == 'csv':
-            reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r', encoding=encoding)
+        if format == "csv":
+            reader = get_streamreader(
+                uri,
+                universal_newlines=universal_newlines,
+                open_mode="r",
+                encoding=encoding,
+            )
             iterator = tap_spreadsheets_anywhere.csv_handler.get_row_iterator(table_spec, reader)
-        elif format == 'excel':
+        elif format == "excel":
             if uri.lower().endswith(".xls"):
-                reader = get_streamreader(uri, universal_newlines=universal_newlines,newline=None, open_mode='rb')
+                reader = get_streamreader(
+                    uri,
+                    universal_newlines=universal_newlines,
+                    newline=None,
+                    open_mode="rb",
+                )
                 iterator = tap_spreadsheets_anywhere.excel_handler.get_legacy_row_iterator(table_spec, reader)
             else:
                 # If encoding is set, smart_open will override binary mode ('b' in open_mode) and it will result in a BadZipFile error
-                reader = get_streamreader(uri, universal_newlines=universal_newlines,newline=None, open_mode='rb', encoding=None)
+                reader = get_streamreader(
+                    uri,
+                    universal_newlines=universal_newlines,
+                    newline=None,
+                    open_mode="rb",
+                    encoding=None,
+                )
                 iterator = tap_spreadsheets_anywhere.excel_handler.get_row_iterator(table_spec, reader)
-        elif format == 'json':
-            reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r', encoding=encoding)
+        elif format == "json":
+            reader = get_streamreader(
+                uri,
+                universal_newlines=universal_newlines,
+                open_mode="r",
+                encoding=encoding,
+            )
             iterator = tap_spreadsheets_anywhere.json_handler.get_row_iterator(table_spec, reader)
-        elif format == 'jsonl':
-            reader = get_streamreader(uri, universal_newlines=universal_newlines, open_mode='r', encoding=encoding)
+        elif format == "jsonl":
+            reader = get_streamreader(
+                uri,
+                universal_newlines=universal_newlines,
+                open_mode="r",
+                encoding=encoding,
+            )
             iterator = tap_spreadsheets_anywhere.jsonl_handler.get_row_iterator(table_spec, reader)
-    except (ValueError,TypeError) as err:
-        raise InvalidFormatError(uri,message=err)
+    except (ValueError, TypeError) as err:
+        raise InvalidFormatError(uri, message=err)
 
-    if format != 'excel':
+    if format != "excel":
         # Reduce the scope of changes to fix Issue #52.
         for _ in range(skip_initial):
             next(iterator)

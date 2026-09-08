@@ -1,15 +1,16 @@
 import json
+import logging
 import re
 from json import JSONDecodeError
+
 from jsonpath_ng.ext import parse
-import logging
 
 LOGGER = logging.getLogger(__name__)
 
 
 def generator_wrapper(root_iterator, table_spec):
     for obj in root_iterator:
-        if table_spec.get("skip_empty_rows", False) and all(value == None or value == '' for value in obj.values()):
+        if table_spec.get("skip_empty_rows", False) and all(value == None or value == "" for value in obj.values()):
             continue
         to_return = {}
         if isinstance(obj, list):
@@ -57,7 +58,7 @@ def get_row_iterator(table_spec, reader):
                 json_objects.append(json.loads(jobj))
             return generator_wrapper(json_objects, table_spec)
         else:
-            raise jde
+            raise
 
 
 def extract_jsonpath(expression, input):

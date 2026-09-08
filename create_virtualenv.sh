@@ -1,2 +1,1 @@
-python3 -m venv venv
-source venv/bin/activate && python setup.py install
+uvx tox devenv -e 3.14 .venv

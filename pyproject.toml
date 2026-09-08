@@ -1,0 +1,70 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tap-spreadsheets-anywhere"
+description = "Singer.io tap for extracting spreadsheet data from cloud storage"
+readme = "README.md"
+license = "AGPL-3.0-only"
+license-files = ["LICENSE"]
+authors = [{ name = "Eric Simmerman" }]
+maintainers = [{ name = "Matatika", email = "info@matatika.com" }]
+requires-python = ">=3.10"
+dynamic = ["version"]
+dependencies = [
+    "singer-python>=5.0.12",
+    "smart_open>=7.3",
+    "voluptuous>=0.10.5",
+    "boto3>=1.15.5",
+    "google-cloud-storage>=2.7.0",
+    "protobuf>=4.21.12",
+    "openpyxl",
+    "xlrd",
+    "paramiko",
+    "azure-storage-blob>=12.14.0",
+    "jsonpath-ng>=1.5.3",
+    "imapfs @ git+https://github.com/Matatika/imapfs.git",
+    "msgraphfs>=0.4,<1",
+    "pyarrow>=25",
+]
+classifiers = [
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Programming Language :: Python :: 3",
+]
+
+[project.urls]
+Homepage = "https://github.com/Matatika/tap-spreadsheets-anywhere"
+Repository = "https://github.com/Matatika/tap-spreadsheets-anywhere"
+
+[project.scripts]
+tap-spreadsheets-anywhere = "tap_spreadsheets_anywhere:main"
+
+[dependency-groups]
+dev = ["pytest"]
+
+[tool.hatch.version]
+fallback-version = "0.0.0dev0"
+source = "vcs"
+
+[tool.hatch.build.targets.wheel]
+packages = ["tap_spreadsheets_anywhere"]
+
+[tool.hatch.metadata]
+# Required because of the `imapfs @ git+...` direct URL dependency above.
+allow-direct-references = true
+
+[tool.pytest]
+testpaths = ["tap_spreadsheets_anywhere/test"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.ruff.lint]
+extend-select = [
+    "G",
+    "LOG",
+]

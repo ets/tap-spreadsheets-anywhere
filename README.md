@@ -163,6 +163,30 @@ To obtain these settings we recommend following this link: [AWS Docs - Credentia
 
 - **ssh_private_key**: (optional) connect to a SFTP server with a private key. Currently this key has to be an RSA key, and should include any spaces and newline characters in your keyfile. (Open to PRs to expand support to other key types).
 
+---
+
+### Replication methods and BATCH support
+
+This tap only ever discovers and reads the full listing of matching files for each configured table on every run (filtered by `start_date`/state via each file's modified timestamp) - there is no `FULL_TABLE` vs `INCREMENTAL` distinction to configure, and no log-based replication.
+
+By default, each row is emitted as its own Singer `RECORD` message. Setting the top-level `batch_config` key opts every stream in the run into Singer [BATCH](https://sdk.meltano.com) mode instead: rows are buffered and written out as [Arrow IPC](https://arrow.apache.org/docs/format/Columnar.html#ipc-file-format) files, referenced from a `BATCH` message's `manifest`, which loaders that understand BATCH (e.g. target-postgres) can ingest far faster than row-by-row `RECORD`s.
+
+```json
+{
+    "tables": [ ... ],
+    "batch_config": {
+        "encoding": { "format": "arrow" },
+        "storage": { "root": "/path/to/a/writable/directory" },
+        "batch_size": 100000
+    }
+}
+```
+
+- **encoding.format**: (optional) only `"arrow"` is currently supported. Other singer-sdk batch encodings (`jsonl`, `parquet`) are not implemented.
+- **storage.root**: (optional) local directory batch files are written to. Defaults to the OS temp directory.
+- **batch_size**: (optional) maximum number of rows buffered per Arrow IPC file before a `BATCH` message is emitted. Defaults to 100,000. A partial batch is still flushed (as its own file) at the end of each configured table.
+
+Each Arrow column's type is derived from the same Singer JSON schema used for `RECORD` mode (`integer`→int64, `number`→float64, `boolean`→bool, everything else, including `date-time`-formatted strings and nested `object`/`array` values, as strings) - so switching `batch_config` on or off does not change the effective schema seen downstream.
 
 ### Automatic Config Generation
 

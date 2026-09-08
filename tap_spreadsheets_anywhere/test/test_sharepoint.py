@@ -8,7 +8,6 @@ URI = "sharepoint://test-site/Documents/"
 
 
 class TestGetSharepointFs(unittest.TestCase):
-
     def setUp(self):
         get_sharepoint_fs.cache_clear()
 
@@ -25,11 +24,13 @@ class TestGetSharepointFs(unittest.TestCase):
         return fs
 
     def test_client_credentials_flow(self):
-        fs = self._get_fs({
-            "client_id": "test-client-id",
-            "client_secret": "test-client-secret",
-            "tenant_id": "test-tenant-id",
-        })
+        fs = self._get_fs(
+            {
+                "client_id": "test-client-id",
+                "client_secret": "test-client-secret",
+                "tenant_id": "test-tenant-id",
+            }
+        )
 
         assert fs.call_args.kwargs == {
             "client_id": "test-client-id",
@@ -40,10 +41,12 @@ class TestGetSharepointFs(unittest.TestCase):
 
     def test_client_credentials_flow_without_tenant_id(self):
         with self.assertRaises(ValueError):
-            self._get_fs({
-                "client_id": "test-client-id",
-                "client_secret": "test-client-secret",
-            })
+            self._get_fs(
+                {
+                    "client_id": "test-client-id",
+                    "client_secret": "test-client-secret",
+                }
+            )
 
     def test_no_credentials(self):
         with self.assertRaises(ValueError) as ctx:
@@ -61,12 +64,14 @@ class TestGetSharepointFs(unittest.TestCase):
             "tap_spreadsheets_anywhere.format_handler.refresh_microsoft_token",
             return_value=TOKEN,
         ) as refresh:
-            fs = self._get_fs({
-                "client_id": "test-client-id",
-                "client_secret": "test-client-secret",
-                "tenant_id": "test-tenant-id",
-                "refresh_token": "test-refresh-token",
-            })
+            fs = self._get_fs(
+                {
+                    "client_id": "test-client-id",
+                    "client_secret": "test-client-secret",
+                    "tenant_id": "test-tenant-id",
+                    "refresh_token": "test-refresh-token",
+                }
+            )
 
         refresh.assert_called_once()
         assert fs.call_args.kwargs == {
